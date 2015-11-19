@@ -1,0 +1,10 @@
+{
+  "name": "file_microservice",
+  "version": "0.0.1",
+  "dependencies": {
+    "express": "~4.13.3",
+    "multer": "~1.1.0",
+    "crypto": "0.0.3",
+    "mkdirp": "~0.5.1"
+  }
+}

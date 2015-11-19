@@ -1,0 +1,42 @@
+{
+  "archiveRoot":"/srv/uploads",
+  "temporaryUploadPath" :"/srv/tmp",
+  "serverPort": 6000,
+  "directoryNameLength":2,
+  "directoryDepth":3,
+  "allowedExtensions": {
+    "jpg": {
+      "officeConversion": false
+    },
+    "png": {
+      "officeConversion": false
+    },
+    "gif": {
+      "officeConversion": false
+    },
+    "jpeg": {
+      "officeConversion": false
+    },
+    "bmp": {
+      "officeConversion": false
+    },
+    "ppt": {
+      "officeConversion": true
+    },
+    "doc": {
+      "officeConversion": true
+    },
+    "docx": {
+      "officeConversion": true
+    },
+    "xls": {
+      "officeConversion": true
+    },
+    "xlsx": {
+      "officeConversion": true
+    },
+    "pptx": {
+      "officeConversion": true
+    }
+  }
+}
