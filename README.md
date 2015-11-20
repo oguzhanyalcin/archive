@@ -16,3 +16,9 @@ This is a simplistic file save and retrieve service written in NodeJS.
 * Dynamic folder organization for fast file access
 * Minimum finger print
 * Serve desired copy of the file
+
+### Libraries below must be installed on the server ###
+
+* [ImageMagick](http://www.imagemagick.org/script/index.php)
+* [Libre Office](https://www.libreoffice.org/) or [Open Office](https://www.openoffice.org/)
+* [Uno Conv](https://github.com/dagwieers/unoconv)

@@ -1,13 +1,13 @@
 //==========================LOAD EXTERNAL LIBRARIES===============================================//
-var express = require('express');//loads the express.js library
-var app = express();//initializes an express app
-var crypto = require('crypto');//for creating hashes
-var fs = require('fs');//enables file system functions
-var multer = require('multer');//enables uploading files
-var mkdirp = require('mkdirp');//creates directories recursively
-var async = require('async');//allows ordering async tasks
-var exec = require('child_process').exec;//allows calling shell scripts as child processes
-var upload = multer({dest: settings.temporaryUploadPath});//enable upload functionality
+var express = require('express'); //loads the express.js library
+var app = express(); //initializes an express app
+var crypto = require('crypto'); //for creating hashes
+var fs = require('fs'); //enables file system functions
+var multer = require('multer'); //enables uploading files
+var mkdirp = require('mkdirp'); //creates directories recursively
+var async = require('async'); //allows ordering async tasks
+var exec = require('child_process').exec; //allows calling shell scripts as child processes
+var upload = multer({dest: settings.temporaryUploadPath}); //enable upload functionality
 //================================================================================================//
 
 //==========================LOAD SETTINGS=========================================================//
@@ -32,10 +32,8 @@ if (!settings.directoryNameLength || settings.directoryNameLength < 1) {
 //================================================================================================//
 
 //==========================CONVERSION SETTINGS=========================================================//
-//TODO: May better load them from settings.json
 var officeConversionScript = "unoconv --connection 'socket,host=127.0.0.1,port=2220,tcpNoDelay=1;urp;StarOffice.ComponentContext' -f pdf ";
 var imageMagickCompressPdfScript = " -alpha off -monochrome -compress Group4 -quality 100 -units PixelsPerInch -density 600 ";
-var imageMagickThumbnailScript = "convert %s %s";
 //================================================================================================//
 
 /**
@@ -68,17 +66,26 @@ app.post('/', upload.single('archiveFile'), function (req, res) {
                 }
                 var tasks = [];
                 tasks.push(function (callback) {
-                    renameUploadedFile(callback, req.file.destination, req.file.filename, md5sum, extension);
+                    renameUploadedFile(callback, req.file.destination, path, req.file.filename, md5sum, extension);
                 });
                 if (settings.allowedExtensions[extension].officeConversion === true) {
                     tasks.push(function (callback) {
-                        convertUsingOffice(callback,req.file.destination+"/"+md5sum+"."+extension,settings.allowedExtensions[extension].useOriginalAsMaster);
+                        convertUsingOffice(callback, path + "/" + md5sum + "." + extension);
                     });
                 } else {
-                    tasks.push(convertUsingImageMagick);
+                    tasks.push(function (callback) {
+                        convertUsingImageMagick(callback, path + "/" + md5sum + "." + extension, path + "/" + md5sum + ".pdf");
+                    });
                 }
-                tasks.push(compressPdf);
-                tasks.push(createThumbnail);
+                tasks.push(function (callback) {
+                    compressPdf(callback, path + "/" + md5sum + ".pdf", path + "/" + md5sum + "_usage.pdf");
+                });
+                tasks.push(function (callback) {
+                    createThumbnail(callback, path + "/" + md5sum + "_usage.pdf", path + "/" + md5sum + "_thumb.jpg")
+                });
+                tasks.push(function (callback) {
+                    removeObsoleteFile(callback, path + "/" + md5sum + "." + extension, path + "/" + md5sum + ".pdf", settings.allowedExtensions[extension].useOriginalAsMaster)
+                });
                 async.series(tasks, function (error) {
                     if (error) {
                         res.type('json').status(400).send({message: error}).end();
@@ -109,12 +116,15 @@ function returnStoragePath(hash) {
 /**
  * Renames the uploaded file according to the given hash preserving the extension
  * @param {function}    callback        async.js callback function
- * @param {string}      filePath        current path of the file
+ * @param {string}      origin          path the uploaded file is located
+ * @param {string}      destination     path the uploaded file will be moved
+ * @param {string}      filename        name of the file
  * @param {string}      hash            calculated hash for the file
+ * @param {string}      extension       original extension of the file
  */
-function renameUploadedFile(callback, destination, filename, hash, extension) {
-    exec('mv ' + destination + "/" + filename + " " + destination + "/" + hash + "." + extension, function (error) {
-            callback(error);
+function renameUploadedFile(callback, origin, destination, filename, hash, extension) {
+    exec('mv ' + origin + "/" + filename + " " + destination + "/" + hash + "." + extension, function (error) {
+        callback(error);
     });
 }
 /**
@@ -122,32 +132,58 @@ function renameUploadedFile(callback, destination, filename, hash, extension) {
  * If the original file is not notified as kept than it will be removed with this function.
  * @param {function}    callback                async.js callback function
  * @param {string}      originalFileLocation    current file
- * @param {boolean}     keepOriginal            value indicating whether to keep the original file
  */
-function convertUsingOffice(callback, originalFileLocation, keepOriginal) {
-    exec(officeConversionScript  + originalFileLocation,function(error){
-       if(error || keepOriginal) {
-           callback(error);
-           return;
-       }
-        exec("rm -y "+originalFileLocation,function(error){
-            //TODO: do we have to throw error when the original file can not be deleted or warn the admin....
-            callback(error);
-        });
+function convertUsingOffice(callback, originalFileLocation) {
+    exec(officeConversionScript + originalFileLocation, function (error) {
+        callback(error);
     });
-    callback(null, targetPath);
 }
 
-function convertUsingImageMagick(callback, currentPath, targetPath) {
-    callback(null, targetPath);
+/**
+ * Creates a pdf file from given input file(probably image file)
+ * @param {function}    callback                async.js callback function
+ * @param {string}      originalFile            current file
+ * @param {string}      targetFile              target pdf file address
+ */
+function convertUsingImageMagick(callback, originalFile, targetFile) {
+    exec("convert " + originalFile + " " + targetFile, function (error) {
+        callback(error);
+    });
 }
 
-function compressPdf(callback, pdfPath) {
-    callback(null, compressedPdfPath);
+/**
+ * Compresses the file for creating usage copy of PDF
+ * @param {function}    callback                async.js callback function
+ * @param {string}      originalFile    current file
+ */
+function compressPdf(callback, originalFile, targetFile) {
+    exec("convert " + originalFile + imageMagickCompressPdfScript + targetFile, function (error) {
+        callback(error);
+    });
+}
+/**
+ * Creates an image from the very first page of the created PDF files.
+ * @param {function}    callback        async.js callback function
+ * @param {string}      originalFile    current file
+ */
+function createThumbnail(callback, originalFile, targetFile) {
+    exec("convert " + originalFile + "[0]" + targetFile, function (error) {
+        callback(error);
+    });
 }
 
-function createThumbnail(callback, pdfPath) {
-    callback(null);
+/**
+ * Last step of storing the file. There are two master files stored on the filesystem.
+ * This will delete one of them according to the useOriginalAsMaster parameter.
+ * @param {function}    callback                async.js callback function
+ * @param {string}      originalFile            original file posted to the server
+ * @param {string}      masterPdfFile           first conversion of the file
+ * @param {boolean}     useOriginalAsMaster     if true pdf is deleted, otherwise original file is deleted
+ */
+function removeObsoleteFile(callback, originalFile, masterPdfFile, useOriginalAsMaster) {
+    exec("rm -y " + (useOriginalAsMaster ? masterPdfFile : originalFile), function (error) {
+        callback(error);
+    });
 }
 //================================================================================================//
 
