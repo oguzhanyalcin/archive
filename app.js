@@ -1,20 +1,25 @@
+//==========================LOAD EXTERNAL LIBRARIES===============================================//
 var express = require('express');//loads the express.js library
 var app = express();//initializes an express app
 var crypto = require('crypto');//for creating hashes
 var fs = require('fs');//enables file system functions
 var multer = require('multer');//enables uploading files
 var mkdirp = require('mkdirp');//creates directories recursively
-var async=require('async');//allows ordering async tasks
+var async = require('async');//allows ordering async tasks
+var exec = require('child_process').exec;//allows calling shell scripts as child processes
+var upload = multer({dest: settings.temporaryUploadPath});//enable upload functionality
+//================================================================================================//
 
-// load settings
+//==========================LOAD SETTINGS=========================================================//
 try {
     var settings = JSON.parse(fs.readFileSync('./settings.json'));
 } catch (ex) {
     console.log(ex);
     return;
 }
+//================================================================================================//
 
-//setting check starts
+//==========================CHECK SETTINGS=========================================================//
 if (!settings.directoryDepth || settings.directoryDepth < 1) {
     console.log("Directory depth param (directoryDepth) must be set and must be bigger than 0");
     return;
@@ -24,12 +29,14 @@ if (!settings.directoryNameLength || settings.directoryNameLength < 1) {
     console.log("Directory name length param (directoryNameLength) must be set and must be bigger than 0");
     return;
 }
+//================================================================================================//
 
-//setting check ends
-
-
-var upload = multer({dest: settings.temporaryUploadPath});
-
+//==========================CONVERSION SETTINGS=========================================================//
+//TODO: May better load them from settings.json
+var officeConversionScript = "unoconv --connection 'socket,host=127.0.0.1,port=2220,tcpNoDelay=1;urp;StarOffice.ComponentContext' -f pdf ";
+var imageMagickCompressPdfScript = " -alpha off -monochrome -compress Group4 -quality 100 -units PixelsPerInch -density 600 ";
+var imageMagickThumbnailScript = "convert %s %s";
+//================================================================================================//
 
 /**
  * Receives the file upload using multer. The file must be posted in a multipart form.
@@ -47,38 +54,45 @@ var upload = multer({dest: settings.temporaryUploadPath});
 app.post('/', upload.single('archiveFile'), function (req, res) {
     if (req.file) {
         var extension = req.file.originalname.substr(req.file.originalname.lastIndexOf("\.") + 1);
-        if(!settings.allowedExtensions[extension]){
-            res.type('json').status(400).send({message:"File type not allowed"}).end();
+        if (!settings.allowedExtensions[extension]) {
+            res.type('json').status(400).send({message: "File type not allowed"}).end();
         }
         var md5sum = crypto.createHash('md5').update(req.file.buffer).digest('hex');
-        var path=settings.archiveRoot + "/" + returnStoragePath(md5sum);
+        var path = settings.archiveRoot + "/" + returnStoragePath(md5sum);
         mkdirp(
             path,
             function (error) {
                 if (error) {
-                    res.type('json').status(500).send({message:error}).end();
+                    res.type('json').status(500).send({message: error}).end();
                     return;
                 }
-                var tasks=[];
-                if(settings.allowedExtensions[extension].officeConversion===true){
-                    tasks.push(convertUsingOffice);
-                }else{
+                var tasks = [];
+                tasks.push(function (callback) {
+                    renameUploadedFile(callback, req.file.destination, req.file.filename, md5sum, extension);
+                });
+                if (settings.allowedExtensions[extension].officeConversion === true) {
+                    tasks.push(function (callback) {
+                        convertUsingOffice(callback,req.file.destination+"/"+md5sum+"."+extension,settings.allowedExtensions[extension].useOriginalAsMaster);
+                    });
+                } else {
                     tasks.push(convertUsingImageMagick);
                 }
                 tasks.push(compressPdf);
                 tasks.push(createThumbnail);
-                async.waterfall(tasks,function(error){
-                    if(error){
-                        res.type('json').status(400).send({message:error}).end();
+                async.series(tasks, function (error) {
+                    if (error) {
+                        res.type('json').status(400).send({message: error}).end();
                         return;
                     }
-                    res.type('json').status(200).send({message:md5sum}).end();
+                    res.type('json').status(200).send({message: md5sum}).end();
                 });
             }
         );
     }
-    res.type('json').status(400).send({message:"File not received"}).end();
+    res.type('json').status(400).send({message: "File not received"}).end();
 });
+
+//=====================================SUPPORT FUNCTIONS==========================================//
 
 /**
  * Returns the target folder of a file with given hash
@@ -92,22 +106,52 @@ function returnStoragePath(hash) {
     return parts.join("/");
 }
 
-function convertUsingOffice(callback,currentPath,targetPath){
-    callback(null,targetPath);
+/**
+ * Renames the uploaded file according to the given hash preserving the extension
+ * @param {function}    callback        async.js callback function
+ * @param {string}      filePath        current path of the file
+ * @param {string}      hash            calculated hash for the file
+ */
+function renameUploadedFile(callback, destination, filename, hash, extension) {
+    exec('mv ' + destination + "/" + filename + " " + destination + "/" + hash + "." + extension, function (error) {
+            callback(error);
+    });
+}
+/**
+ * Creates a PDF instance of the uploaded file using soffice convertor.
+ * If the original file is not notified as kept than it will be removed with this function.
+ * @param {function}    callback                async.js callback function
+ * @param {string}      originalFileLocation    current file
+ * @param {boolean}     keepOriginal            value indicating whether to keep the original file
+ */
+function convertUsingOffice(callback, originalFileLocation, keepOriginal) {
+    exec(officeConversionScript  + originalFileLocation,function(error){
+       if(error || keepOriginal) {
+           callback(error);
+           return;
+       }
+        exec("rm -y "+originalFileLocation,function(error){
+            //TODO: do we have to throw error when the original file can not be deleted or warn the admin....
+            callback(error);
+        });
+    });
+    callback(null, targetPath);
 }
 
-function convertUsingImageMagick(callback,currentPath,targetPath){
-    callback(null,targetPath);
+function convertUsingImageMagick(callback, currentPath, targetPath) {
+    callback(null, targetPath);
 }
 
-function compressPdf(callback,pdfPath){
-    callback(null,compressedPdfPath);
+function compressPdf(callback, pdfPath) {
+    callback(null, compressedPdfPath);
 }
 
-function createThumbnail(callback,pdfPath){
+function createThumbnail(callback, pdfPath) {
     callback(null);
 }
+//================================================================================================//
 
+//=================================SERVER INIT SCRIPT=============================================//
 var server = app.listen(settings.serverPort, function () {
     var host = server.address().address;
     var port = server.address().port;
@@ -128,3 +172,4 @@ var server = app.listen(settings.serverPort, function () {
     console.log('!!!CAUTION!!! DO NOT CHANGE THE SETTINGS AFTER FIRST RUN');
 
 });
+//================================================================================================//

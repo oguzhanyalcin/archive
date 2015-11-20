@@ -1,41 +1,54 @@
 {
-  "archiveRoot":"/srv/uploads",
-  "temporaryUploadPath" :"/srv/tmp",
+  "archiveRoot": "/srv/uploads",
+  "temporaryUploadPath": "/srv/tmp",
   "serverPort": 6000,
-  "directoryNameLength":2,
-  "directoryDepth":3,
+  "directoryNameLength": 2,
+  "directoryDepth": 3,
+  "officeSocketIp": "127.0.0.1",
+  "officeSocketPort": 2220,
   "allowedExtensions": {
     "jpg": {
+      "useOriginalAsMaster": false,
       "officeConversion": false
     },
     "png": {
+      "useOriginalAsMaster": false,
       "officeConversion": false
     },
     "gif": {
+      "useOriginalAsMaster": false,
       "officeConversion": false
     },
     "jpeg": {
+      "useOriginalAsMaster": false,
       "officeConversion": false
     },
     "bmp": {
+      "useOriginalAsMaster": false,
       "officeConversion": false
     },
     "ppt": {
+      "useOriginalAsMaster": true,
       "officeConversion": true
     },
     "doc": {
+      "useOriginalAsMaster": true,
       "officeConversion": true
     },
     "docx": {
+      "useOriginalAsMaster": true,
       "officeConversion": true
     },
     "xls": {
+      "useOriginalAsMaster": true,
       "officeConversion": true
     },
     "xlsx": {
+      "useOriginalAsMaster": true,
       "officeConversion": true
     },
     "pptx": {
+      "useOriginalAsMaster": true,
       "officeConversion": true
     }
   }
