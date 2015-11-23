@@ -36,6 +36,8 @@ if (!settings.directoryNameLength || settings.directoryNameLength < 1) {
 //================================================================================================//
 
 
+
+//====================================ROUTES======================================================//
 /**
  * Receives the file upload using multer. The file must be posted in a multipart form.
  * The name of the file field must be archiveFile. With multer the file will be stored in a path
@@ -81,7 +83,7 @@ app.get('/:hash/:size', function (request, res) {
             return path.join(path, file);
         });
         if(!files || file.length===0){
-            console.log('XXX File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + path);
+            console.log('XXX File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + path+' Error is: File not found');
             response.type('json').status(error.status).end();
             return;
         }
@@ -94,6 +96,7 @@ app.get('/:hash/:size', function (request, res) {
         });
     });
 });
+//================================================================================================//
 
 //=================================SERVER INIT SCRIPT=============================================//
 var server = app.listen(settings.serverPort, function () {
