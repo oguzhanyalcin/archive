@@ -1,3 +1,5 @@
+[![Coverage Status](https://coveralls.io/repos/oguzhanyalcin/fileservice/badge.svg?branch=master&service=bitbucket)](https://coveralls.io/bitbucket/oguzhanyalcin/fileservice?branch=master)
+
 # File Service #
 
 This is a simplistic file save and retrieve service written in NodeJS.
