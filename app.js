@@ -1,22 +1,26 @@
 //==========================LOAD EXTERNAL LIBRARIES===============================================//
 var express = require('express'); //loads the express.js library
 var app = express(); //initializes an express app
-var crypto = require('crypto'); //for creating hashes
 var fs = require('fs'); //enables file system functions
 var multer = require('multer'); //enables uploading files
-var mkdirp = require('mkdirp'); //creates directories recursively
-var async = require('async'); //allows ordering async tasks
-var exec = require('child_process').exec; //allows calling shell scripts as child processes
 //================================================================================================//
 
 //==========================LOAD SETTINGS=========================================================//
+var settings;
 try {
-    var settings = JSON.parse(fs.readFileSync('./settings.json'));
+    settings = JSON.parse(fs.readFileSync('./settings.json'));
 } catch (ex) {
     console.log(ex);
     return;
 }
 var upload = multer({dest: settings.temporaryUploadPath}); //enable upload functionality
+var fileProcessor = require('./FileProcessor.js')(settings);//File processing helper
+var downloadOptions={
+    headers: {
+        'x-timestamp': Date.now(),
+        'x-sent': true
+    }
+};
 //================================================================================================//
 
 //==========================CHECK SETTINGS=========================================================//
@@ -31,10 +35,6 @@ if (!settings.directoryNameLength || settings.directoryNameLength < 1) {
 }
 //================================================================================================//
 
-//==========================CONVERSION SETTINGS=========================================================//
-var officeConversionScript = "unoconv --connection 'socket,host=127.0.0.1,port=2220,tcpNoDelay=1;urp;StarOffice.ComponentContext' -f pdf ";
-var imageMagickCompressPdfScript = " -alpha off -monochrome -compress Group4 -quality 100 -units PixelsPerInch -density 600 ";
-//================================================================================================//
 
 /**
  * Receives the file upload using multer. The file must be posted in a multipart form.
@@ -49,143 +49,51 @@ var imageMagickCompressPdfScript = " -alpha off -monochrome -compress Group4 -qu
  * - put watermark if setting is active
  * - return the hash of the file
  */
-app.post('/', upload.single('archiveFile'), function (req, res) {
-    if (req.file) {
-        var extension = req.file.originalname.substr(req.file.originalname.lastIndexOf("\.") + 1);
-        if (!settings.allowedExtensions[extension]) {
-            res.type('json').status(400).send({message: "File type not allowed"}).end();
-        }
-        var md5sum = crypto.createHash('md5').update(req.file.buffer).digest('hex');
-        var path = settings.archiveRoot + "/" + returnStoragePath(md5sum);
-        mkdirp(
-            path,
-            function (error) {
-                if (error) {
-                    res.type('json').status(500).send({message: error}).end();
-                    return;
-                }
-                var tasks = [];
-                tasks.push(function (callback) {
-                    renameUploadedFile(callback, req.file.destination, path, req.file.filename, md5sum, extension);
-                });
-                if (settings.allowedExtensions[extension].officeConversion === true) {
-                    tasks.push(function (callback) {
-                        convertUsingOffice(callback, path + "/" + md5sum + "." + extension);
-                    });
-                } else {
-                    tasks.push(function (callback) {
-                        convertUsingImageMagick(callback, path + "/" + md5sum + "." + extension, path + "/" + md5sum + ".pdf");
-                    });
-                }
-                tasks.push(function (callback) {
-                    compressPdf(callback, path + "/" + md5sum + ".pdf", path + "/" + md5sum + "_usage.pdf");
-                });
-                tasks.push(function (callback) {
-                    createThumbnail(callback, path + "/" + md5sum + "_usage.pdf", path + "/" + md5sum + "_thumb.jpg")
-                });
-                tasks.push(function (callback) {
-                    removeObsoleteFile(callback, path + "/" + md5sum + "." + extension, path + "/" + md5sum + ".pdf", settings.allowedExtensions[extension].useOriginalAsMaster)
-                });
-                async.series(tasks, function (error) {
-                    if (error) {
-                        res.type('json').status(400).send({message: error}).end();
-                        return;
-                    }
-                    res.type('json').status(200).send({message: md5sum}).end();
-                });
-            }
-        );
-    }
-    res.type('json').status(400).send({message: "File not received"}).end();
+app.post('/', upload.single('archiveFile'), function (request, response) {
+    fileProcessor.processFile(request.file, function (status, message) {
+        response.type('json').status(status).send({message: message}).end();
+    });
 });
 
-//=====================================SUPPORT FUNCTIONS==========================================//
-
 /**
- * Returns the target folder of a file with given hash
- * @param   {string}  hash  md5 hash of the file
- * @returns {string}  final destination that the file will be saved
+ * This route gets two parameters as input. First one is hash of the file that is requested.
+ * The second one is the size of the file (0-master,1-usage,2-thumbnail)
+ * checks the hash and tries to find the file. If no file is found then returns error.
  */
-function returnStoragePath(hash) {
-    var regex = new RegExp("[\\s\\S]{1," + settings.directoryNameLength + "}", "g");
-    var length = settings.directoryNameLength * settings.directoryDepth;
-    var parts = hash.toUpperCase().substring(0, length).match(regex) || [];
-    return parts.join("/");
-}
-
-/**
- * Renames the uploaded file according to the given hash preserving the extension
- * @param {function}    callback        async.js callback function
- * @param {string}      origin          path the uploaded file is located
- * @param {string}      destination     path the uploaded file will be moved
- * @param {string}      filename        name of the file
- * @param {string}      hash            calculated hash for the file
- * @param {string}      extension       original extension of the file
- */
-function renameUploadedFile(callback, origin, destination, filename, hash, extension) {
-    exec('mv ' + origin + "/" + filename + " " + destination + "/" + hash + "." + extension, function (error) {
-        callback(error);
+app.get('/:hash/:size', function (request, res) {
+    var hash = request.params.hash;
+    var size=request.params.size || 0;
+    if(!hash || hash.length!=32){
+        response.type('json').status(400).send({message: "Hash not recognized"}).end();
+        return;
+    }
+    var extraInfo=size==1?"_usage":(size==2?"_thumb":"");
+    var path=fileProcessor.returnStoragePath(hash);
+    fs.readdir(path,function(error,files){
+        if(error){
+            console.log('XXX File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + path + ' Error is: '+error);
+            response.type('json').status(error.status).end();
+            return;
+        }
+        var files=files.filter(function (file) {
+            return  file.startsWith("/"+hash+extraInfo) && fs.statSync(file).isFile() ;
+        }).map(function (file) {
+            return path.join(path, file);
+        });
+        if(!files || file.length===0){
+            console.log('XXX File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + path);
+            response.type('json').status(error.status).end();
+            return;
+        }
+        response.sendFile(files[0],downloadOptions,function(error){
+            if(error){
+                console.log('XXX File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + path + ' Error is: '+error);
+                response.type('json').status(error.status).end();
+                return;
+            }
+        });
     });
-}
-/**
- * Creates a PDF instance of the uploaded file using soffice convertor.
- * If the original file is not notified as kept than it will be removed with this function.
- * @param {function}    callback                async.js callback function
- * @param {string}      originalFileLocation    current file
- */
-function convertUsingOffice(callback, originalFileLocation) {
-    exec(officeConversionScript + originalFileLocation, function (error) {
-        callback(error);
-    });
-}
-
-/**
- * Creates a pdf file from given input file(probably image file)
- * @param {function}    callback                async.js callback function
- * @param {string}      originalFile            current file
- * @param {string}      targetFile              target pdf file address
- */
-function convertUsingImageMagick(callback, originalFile, targetFile) {
-    exec("convert " + originalFile + " " + targetFile, function (error) {
-        callback(error);
-    });
-}
-
-/**
- * Compresses the file for creating usage copy of PDF
- * @param {function}    callback                async.js callback function
- * @param {string}      originalFile    current file
- */
-function compressPdf(callback, originalFile, targetFile) {
-    exec("convert " + originalFile + imageMagickCompressPdfScript + targetFile, function (error) {
-        callback(error);
-    });
-}
-/**
- * Creates an image from the very first page of the created PDF files.
- * @param {function}    callback        async.js callback function
- * @param {string}      originalFile    current file
- */
-function createThumbnail(callback, originalFile, targetFile) {
-    exec("convert " + originalFile + "[0]" + targetFile, function (error) {
-        callback(error);
-    });
-}
-
-/**
- * Last step of storing the file. There are two master files stored on the filesystem.
- * This will delete one of them according to the useOriginalAsMaster parameter.
- * @param {function}    callback                async.js callback function
- * @param {string}      originalFile            original file posted to the server
- * @param {string}      masterPdfFile           first conversion of the file
- * @param {boolean}     useOriginalAsMaster     if true pdf is deleted, otherwise original file is deleted
- */
-function removeObsoleteFile(callback, originalFile, masterPdfFile, useOriginalAsMaster) {
-    exec("rm -y " + (useOriginalAsMaster ? masterPdfFile : originalFile), function (error) {
-        callback(error);
-    });
-}
-//================================================================================================//
+});
 
 //=================================SERVER INIT SCRIPT=============================================//
 var server = app.listen(settings.serverPort, function () {
