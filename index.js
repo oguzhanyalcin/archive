@@ -43,17 +43,7 @@ var downloadOptions={
 };
 //================================================================================================//
 
-//==========================CHECK SETTINGS=========================================================//
-if (!settings.directoryDepth || settings.directoryDepth < 1) {
-    logger.log('error',"Directory depth param (directoryDepth) must be set and must be bigger than 0");
-    return;
-}
 
-if (!settings.directoryNameLength || settings.directoryNameLength < 1) {
-    logger.log('error',"Directory name length param (directoryNameLength) must be set and must be bigger than 0");
-    return;
-}
-//================================================================================================//
 
 
 
