@@ -1,4 +1,5 @@
 /*eslint-env node*/
+/*jshint expr: true*/
 var expect = require('chai').expect;
 var assert = require('chai').assert;
 var exec = require('child_process').exec; //allows calling shell scripts as child processes
@@ -135,7 +136,7 @@ describe('File processing functions', function () {
     describe('Check file function', function () {
 
         it('will fail on empty file descriptor', function (done) {
-            var result = fileProcessor23.checkFileContent(null, testSettings.allowedExtensions)
+            var result = fileProcessor23.checkFileContent(null, testSettings.allowedExtensions);
             expect(result.message).to.exist;
             expect(result.extension).to.not.exist;
             assert.equal(result.type, "error");
@@ -276,7 +277,7 @@ describe('File processing functions', function () {
                                     }
                                 }
                             }, __dirname+"/../files/archive", __dirname+"/../files/image_conversion",
-                            "ABCDECBS09654324561712.jpg", "test", "jpg")
+                            "ABCDECBS09654324561712.jpg", "test", "jpg");
                     }
                 }, __dirname+"/../files/image_conversion", __dirname+"/../files/archive", "test.jpg",
                 "ABCDECBS09654324561712", "jpg");
