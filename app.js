@@ -82,7 +82,7 @@ app.post('/', upload.single('archiveFile'), function (request, response) {
  * The second one is the size of the file (0-master,1-usage,2-thumbnail)
  * checks the hash and tries to find the file. If no file is found then returns error.
  */
-app.get('/:hash/:size', function (request, res) {
+app.get('/:hash/:size', function (request, response) {
     var hash = request.params.hash;
     var size=request.params.size || 0;
     if(!hash || hash.length!=32){
