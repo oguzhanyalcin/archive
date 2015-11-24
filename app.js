@@ -96,17 +96,17 @@ app.get('/:hash/:size', function (request, response) {
             response.type('json').status(error.status).end();
             return;
         }
-        var files=files.filter(function (file) {
+        var filesToProcess=files.filter(function (file) {
             return  file.startsWith("/"+hash+extraInfo) && fs.statSync(file).isFile() ;
         }).map(function (file) {
             return path.join(path, file);
         });
-        if(!files || files.length===0){
+        if(!filesToProcess || filesToProcess.length===0){
             logger.log('error','File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + path+' Error is: File not found');
             response.type('json').status(error.status).end();
             return;
         }
-        response.sendFile(files[0],downloadOptions,function(error){
+        response.sendFile(filesToProcess[0],downloadOptions,function(error){
             if(error){
                 logger.log('error','File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + path + ' Error is: '+error);
                 response.type('json').status(error.status).end();
