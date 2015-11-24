@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/oguzhanyalcin/archive.svg)](https://travis-ci.org/oguzhanyalcin/archive)[![Coverage Status](https://coveralls.io/repos/oguzhanyalcin/archive/badge.svg?branch=master&service=github)](https://coveralls.io/github/oguzhanyalcin/archive?branch=master)[![Code Climate](https://codeclimate.com/repos/565382bf2ddb7b003e007fd5/badges/50557e4e01a9110697e5/gpa.svg)](https://codeclimate.com/repos/565382bf2ddb7b003e007fd5/feed)[![Test Coverage](https://codeclimate.com/repos/565382bf2ddb7b003e007fd5/badges/50557e4e01a9110697e5/coverage.svg)](https://codeclimate.com/repos/565382bf2ddb7b003e007fd5/coverage)
+[![Build Status](https://travis-ci.org/oguzhanyalcin/archive.svg)](https://travis-ci.org/oguzhanyalcin/archive) [![Code Climate](https://codeclimate.com/repos/565382bf2ddb7b003e007fd5/badges/50557e4e01a9110697e5/gpa.svg)](https://codeclimate.com/repos/565382bf2ddb7b003e007fd5/feed)  [![Test Coverage](https://codeclimate.com/repos/565382bf2ddb7b003e007fd5/badges/50557e4e01a9110697e5/coverage.svg)](https://codeclimate.com/repos/565382bf2ddb7b003e007fd5/coverage)
 
 # File Service #
 
