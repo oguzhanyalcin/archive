@@ -1,3 +1,4 @@
+/*eslint-env node*/
 //==========================LOAD EXTERNAL LIBRARIES===============================================//
 var express = require('express'); //loads the express.js library
 var app = express(); //initializes an express app
@@ -33,7 +34,7 @@ try {
     return;
 }
 var upload = multer({dest: settings.temporaryUploadPath}); //enable upload functionality
-var fileProcessor = require('./FileProcessor.js')(settings);//File processing helper
+var fileProcessor = require('./lib/FileProcessor.js')(settings);//File processing helper
 var downloadOptions={
     headers: {
         'x-timestamp': Date.now(),
@@ -116,26 +117,8 @@ app.get('/:hash/:size', function (request, response) {
     });
 });
 //================================================================================================//
-
-//=================================SERVER INIT SCRIPT=============================================//
-var server = app.listen(settings.serverPort, function () {
-    var host = server.address().address;
-    var port = server.address().port;
-
-    logger.log('info','SIMPLE FILE ARCHIVE STARTED SERVING... ');
-    logger.log('info','');
-    logger.log('info','______________________  SETTINGS  ______________________');
-    logger.log('info','');
-    logger.log('info','Server Address       : %s:%s', host, port);
-    logger.log('info','Archive Root         : ' + settings.archiveRoot);
-    logger.log('info','Upload Path          : ' + settings.temporaryUploadPath);
-    logger.log('info','Directory Length     : ' + settings.directoryNameLength);
-    logger.log('info','Directory Depth      : ' + settings.directoryDepth);
-    logger.log('info','Supported File Types : ' + Object.keys(settings.allowedExtensions).join());
-    logger.log('info','________________________________________________________');
-    logger.log('info','');
-
-    logger.log('info','!!!CAUTION!!! DO NOT CHANGE THE SETTINGS AFTER FIRST RUN');
-
-});
-//================================================================================================//
+module.exports={
+    app:app,
+    logger:logger,
+    settings: settings
+};

@@ -61,7 +61,7 @@ var testSettings = {
     }
 };
 
-var fileProcessor23 = require('../../FileProcessor.js')(testSettings);
+var fileProcessor23 = require('../../lib/FileProcessor.js')(testSettings);
 
 describe('File processing functions', function () {
     /**
@@ -126,7 +126,7 @@ describe('File processing functions', function () {
             var clonedSettings = JSON.parse(JSON.stringify(testSettings));
             clonedSettings.directoryNameLength = 3;
             clonedSettings.directoryDepth = 2;
-            var fileProcessor32 = require('../../FileProcessor.js')(clonedSettings);
+            var fileProcessor32 = require('../../lib/FileProcessor.js')(clonedSettings);
             var result = fileProcessor32.returnStoragePath("ABCDEF123456789");
             assert.equal(result, "ABC/DEF/ABCDEF123456789");
             done();
