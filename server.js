@@ -1,4 +1,8 @@
-var app=require('./index.js');
+/*eslint-env node*/
+var routes=require('./index.js');
+var settings=routes.settings;
+var logger=routes.logger;
+var app=routes.app;
 
 //=================================SERVER INIT SCRIPT=============================================//
 app.listen(settings.serverPort, function () {
