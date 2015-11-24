@@ -1,3 +1,4 @@
+/*eslint-env node*/
 var mkdirp = require('mkdirp'); //creates directories recursively
 var async = require('async'); //allows ordering async tasks
 var exec = require('child_process').exec; //allows calling shell scripts as child processes
