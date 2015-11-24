@@ -11,6 +11,8 @@ before_install:
   - sudo apt-get install -y libreoffice
   - sudo apt-get install -y unoconv
   - sudo apt-get install -y imagemagick
+before_script:
+  - npm install -g mocha
 addons:
     code_climate:
         repo_token: 5708ac2ce7800648d7f36b2b5150d4aeb9ed16eb6ffd967ff555e56743842b8c
