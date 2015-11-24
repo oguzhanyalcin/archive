@@ -168,12 +168,12 @@ module.exports = function (settings) {
                         this.compressPdf(callback, path + "/" + md5sum + ".pdf", path + "/" + md5sum + "_usage.pdf");
                     });
                     tasks.push(function (callback) {
-                        this.createThumbnail(callback, path + "/" + md5sum + "_usage.pdf", path + "/" + md5sum + "_thumb.jpg")
+                        this.createThumbnail(callback, path + "/" + md5sum + "_usage.pdf", path + "/" + md5sum + "_thumb.jpg");
                     });
 
                     if (extension != "pdf") {
                         tasks.push(function (callback) {
-                            this.removeObsoleteFile(callback, path + "/" + md5sum + "." + extension, path + "/" + md5sum + ".pdf", settings.allowedExtensions[extension].useOriginalAsMaster)
+                            this.removeObsoleteFile(callback, path + "/" + md5sum + "." + extension, path + "/" + md5sum + ".pdf", settings.allowedExtensions[extension].useOriginalAsMaster);
                         });
                     }
                     async.series(tasks, function (error) {

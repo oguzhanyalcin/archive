@@ -63,6 +63,19 @@ var testSettings = {
 var fileProcessor23 = require('../../FileProcessor.js')(testSettings);
 
 describe('File processing functions', function () {
+    /**
+     * Handles the non existing file problems
+     * @param {Object}      error       error returned by the conversion process
+     * @param {function}    done        mocha done function for compğleting test
+     */
+    function commonErrorHandler(error,done) {
+        if (error) {
+            done();
+        } else {
+            done(new Error("Process did not throw error"));
+        }
+    }
+
 
     /**
      * Validates and removes the generated pdf file during conversion processes
@@ -76,7 +89,7 @@ describe('File processing functions', function () {
         if (error) {
             done(error);
         } else {
-            var filename = __dirname+"/../files/"+(office?"office":"image")+"_conversion/test" + addon + ".pdf"
+            var filename = __dirname+"/../files/"+(office?"office":"image")+"_conversion/test" + addon + ".pdf";
             if (!fs.existsSync(filename)) {
                 done(new Error("System did not threw error but the file is not created"));
             } else {
@@ -237,13 +250,9 @@ describe('File processing functions', function () {
     describe('Move file function', function () {
 
         it(' will fail when original file is not found', function (done) {
-            fileProcessor23.moveUploadedFile(function (error) {
-                    if (error) {
-                        done();
-                    } else {
-                        done(new Error("Process did not throw error"));
-                    }
-                }, "/srv/non/existing/folder", "/srv/another/non/existing/folder", "test",
+            fileProcessor23.moveUploadedFile(function(error){
+                commonErrorHandler(error,done);
+            }, "/srv/non/existing/folder", "/srv/another/non/existing/folder", "test",
                 "ABCDECBS09654324561712", "jpg");
         });
 
@@ -279,11 +288,7 @@ describe('File processing functions', function () {
 
         it(' will fail when original file is not found', function (done) {
             fileProcessor23.convertUsingOffice(function (error) {
-                if (error) {
-                    done();
-                } else {
-                    done(new Error("Process did not throw error"));
-                }
+                commonErrorHandler(error,done);
             }, "/srv/non/existing/folder/test.doc");
         });
 
@@ -335,11 +340,7 @@ describe('File processing functions', function () {
 
         it(' will fail when original file is not found', function (done) {
             fileProcessor23.convertUsingImageMagick(function (error) {
-                if (error) {
-                    done();
-                } else {
-                    done(new Error("Process did not throw error"));
-                }
+                commonErrorHandler(error,done);
             }, "/srv/non/existing/folder/test.jpg", "/srv/non/existing/folder/test.pdf");
         });
 
@@ -391,11 +392,7 @@ describe('File processing functions', function () {
 
         it(' will fail when original file is not found', function (done) {
             fileProcessor23.compressPdf(function (error) {
-                if (error) {
-                    done();
-                } else {
-                    done(new Error("Process did not throw error"));
-                }
+                commonErrorHandler(error,done);
             }, "/srv/non/existing/folder/test.pdf", "/srv/non/existing/folder/test_usage.pdf");
         });
 
@@ -410,11 +407,7 @@ describe('File processing functions', function () {
     describe('Create thumbnail using imagemagick function', function () {
         it(' will fail when original file is not found', function (done) {
             fileProcessor23.compressPdf(function (error) {
-                if (error) {
-                    done();
-                } else {
-                    done(new Error("Process did not throw error"));
-                }
+                commonErrorHandler(error,done);
             }, "/srv/non/existing/folder/test_usage.pdf", "/srv/non/existing/folder/test_thumb.pdf");
         });
 
