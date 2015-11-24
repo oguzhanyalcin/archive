@@ -3,6 +3,26 @@ var express = require('express'); //loads the express.js library
 var app = express(); //initializes an express app
 var fs = require('fs'); //enables file system functions
 var multer = require('multer'); //enables uploading files
+var winston = require('winston');//enable logging
+var moment=require('moment');
+var logger = new(winston.Logger)({
+    exitOnError: false,
+    transports: [
+        new(winston.transports.DailyRotateFile)({
+            filename: __dirname + '/logs/server.info.log',
+            datePattern: '.yyyyMMddHH',
+            level: 'info'
+        }),
+        new(winston.transports.DailyRotateFile)({
+            filename: __dirname + '/logs/server.error.log',
+            datePattern: '.yyyyMMddHH',
+            level: 'error'
+        }),
+        new(winston.transports.Console)({
+            colorize: true
+        })
+    ]
+});
 //================================================================================================//
 
 //==========================LOAD SETTINGS=========================================================//
@@ -10,7 +30,7 @@ var settings;
 try {
     settings = JSON.parse(fs.readFileSync('./settings.json'));
 } catch (ex) {
-    console.log(ex);
+    logger.log('error',ex);
     return;
 }
 var upload = multer({dest: settings.temporaryUploadPath}); //enable upload functionality
@@ -25,12 +45,12 @@ var downloadOptions={
 
 //==========================CHECK SETTINGS=========================================================//
 if (!settings.directoryDepth || settings.directoryDepth < 1) {
-    console.log("Directory depth param (directoryDepth) must be set and must be bigger than 0");
+    logger.log('error',"Directory depth param (directoryDepth) must be set and must be bigger than 0");
     return;
 }
 
 if (!settings.directoryNameLength || settings.directoryNameLength < 1) {
-    console.log("Directory name length param (directoryNameLength) must be set and must be bigger than 0");
+    logger.log('error',"Directory name length param (directoryNameLength) must be set and must be bigger than 0");
     return;
 }
 //================================================================================================//
@@ -73,7 +93,7 @@ app.get('/:hash/:size', function (request, res) {
     var path=fileProcessor.returnStoragePath(hash);
     fs.readdir(path,function(error,files){
         if(error){
-            console.log('XXX File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + path + ' Error is: '+error);
+            logger.log('error','File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + path + ' Error is: '+error);
             response.type('json').status(error.status).end();
             return;
         }
@@ -82,14 +102,14 @@ app.get('/:hash/:size', function (request, res) {
         }).map(function (file) {
             return path.join(path, file);
         });
-        if(!files || file.length===0){
-            console.log('XXX File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + path+' Error is: File not found');
+        if(!files || files.length===0){
+            logger.log('error','File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + path+' Error is: File not found');
             response.type('json').status(error.status).end();
             return;
         }
         response.sendFile(files[0],downloadOptions,function(error){
             if(error){
-                console.log('XXX File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + path + ' Error is: '+error);
+                logger.log('error','File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + path + ' Error is: '+error);
                 response.type('json').status(error.status).end();
                 return;
             }
@@ -103,20 +123,20 @@ var server = app.listen(settings.serverPort, function () {
     var host = server.address().address;
     var port = server.address().port;
 
-    console.log('SIMPLE FILE ARCHIVE STARTED SERVING... ');
-    console.log('');
-    console.log('______________________  SETTINGS  ______________________');
-    console.log('');
-    console.log('Server Address       : %s:%s', host, port);
-    console.log('Archive Root         : ' + settings.archiveRoot);
-    console.log('Upload Path          : ' + settings.temporaryUploadPath);
-    console.log('Directory Length     : ' + settings.directoryNameLength);
-    console.log('Directory Depth      : ' + settings.directoryDepth);
-    console.log('Supported File Types : ' + Object.keys(settings.allowedExtensions).join());
-    console.log('________________________________________________________');
-    console.log('');
+    logger.log('info','SIMPLE FILE ARCHIVE STARTED SERVING... ');
+    logger.log('info','');
+    logger.log('info','______________________  SETTINGS  ______________________');
+    logger.log('info','');
+    logger.log('info','Server Address       : %s:%s', host, port);
+    logger.log('info','Archive Root         : ' + settings.archiveRoot);
+    logger.log('info','Upload Path          : ' + settings.temporaryUploadPath);
+    logger.log('info','Directory Length     : ' + settings.directoryNameLength);
+    logger.log('info','Directory Depth      : ' + settings.directoryDepth);
+    logger.log('info','Supported File Types : ' + Object.keys(settings.allowedExtensions).join());
+    logger.log('info','________________________________________________________');
+    logger.log('info','');
 
-    console.log('!!!CAUTION!!! DO NOT CHANGE THE SETTINGS AFTER FIRST RUN');
+    logger.log('info','!!!CAUTION!!! DO NOT CHANGE THE SETTINGS AFTER FIRST RUN');
 
 });
 //================================================================================================//
