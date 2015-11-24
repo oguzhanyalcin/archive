@@ -2,7 +2,8 @@
   "name": "archive",
   "version": "0.0.1",
   "scripts": {
-    "test": "./node_modules/mocha/bin/mocha --recursive "
+    "test": "mocha --recursive ",
+    "cover": "istanbul cover _mocha"
   },
   "dependencies": {
     "express": "~4.13.3",
