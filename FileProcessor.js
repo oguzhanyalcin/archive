@@ -31,6 +31,9 @@ module.exports = function (settings) {
             if (!file.destination || !file.filename || !file.originalname) {
                 return {type: "error", message: "Missing file information"};
             }
+            if(file.originalname.lastIndexOf("\.")===-1){
+                return {type: "error", message: "File must have an extension"};
+            }
             var extension = file.originalname.substr(file.originalname.lastIndexOf("\.") + 1).toLowerCase();
             if (!extension || !allowedExtensions[extension]) {
                 return {type: "error", message: "File type not allowed"};
@@ -107,7 +110,7 @@ module.exports = function (settings) {
          * @param {boolean}     useOriginalAsMaster     if true pdf is deleted, otherwise original file is deleted
          */
         removeObsoleteFile: function (callback, originalFile, masterPdfFile, useOriginalAsMaster) {
-            exec("rm -y " + (useOriginalAsMaster ? masterPdfFile : originalFile), function (error) {
+            exec("rm -f " + (useOriginalAsMaster ? masterPdfFile : originalFile), function (error) {
                 callback(error);
             });
         },

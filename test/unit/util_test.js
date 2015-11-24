@@ -2,10 +2,11 @@
 var expect = require('chai').expect;
 var assert = require('chai').assert;
 var exec = require('child_process').exec; //allows calling shell scripts as child processes
+var fs = require('fs'); //enables file system functions
 
 var testSettings = {
-    archiveRoot: "../files/archive",
-    temporaryUploadPath: "../files",
+    archiveRoot: __dirname+"/../files/archive",
+    temporaryUploadPath: __dirname+"/../files",
     serverPort: 6000,
     directoryNameLength: 2,
     directoryDepth: 3,
@@ -69,24 +70,24 @@ describe('File processing functions', function () {
      * @param {function}    done        mocha done function for compğleting test
      * @param {boolean}     keepPdf     flag for keeping the generated pdf as is
      * @param {string}      addon       addon to file name for using same function more than one operation
+     * @param {boolean}     office      flag for the caller uses the office directory if not image directory is used
      */
-    function conversionHandler(error, done, keepPdf, addon) {
+    function conversionHandler(error, done, keepPdf, addon,office) {
         if (error) {
             done(error);
         } else {
-            var filename = "../files/office_conversion/test" + addon + ".pdf"
+            var filename = __dirname+"/../files/"+(office?"office":"image")+"_conversion/test" + addon + ".pdf"
             if (!fs.existsSync(filename)) {
                 done(new Error("System did not threw error but the file is not created"));
             } else {
                 var stats = fs.statSync(filename);
                 if (!keepPdf) {
-                    exec("rm -y " + filename, function (error) {
+                    exec("rm -f " + filename, function (error) {
                         if (stats.size > 0) {
                             done(error);
                         } else {
                             done("File created but size is 0 " + (error ? " and generated file can not be removed" : ""));
                         }
-
                     });
                 } else {
                     if (stats.size > 0) {
@@ -140,8 +141,8 @@ describe('File processing functions', function () {
 
         it('will fail on missing destination', function (done) {
             var correctValue = {
-                path: "../files/EBYS.jpg",
-                destination: "../files/",
+                path: __dirname+"/../files/image_conversion/test.jpg",
+                destination: __dirname+"/../files/",
                 filename: "EBYS.jpg",
                 originalname: "EBYS.jpg"
             };
@@ -156,8 +157,8 @@ describe('File processing functions', function () {
 
         it('will fail on missing filename', function (done) {
             var correctValue = {
-                path: "../files/EBYS.jpg",
-                destination: "../files/",
+                path: __dirname+"/../files/image_conversion/test.jpg",
+                destination: __dirname+"/../files/",
                 filename: "EBYS.jpg",
                 originalname: "EBYS.jpg"
             };
@@ -172,8 +173,8 @@ describe('File processing functions', function () {
 
         it('will fail on missing original name', function (done) {
             var correctValue = {
-                path: "../files/EBYS.jpg",
-                destination: "../files/",
+                path: __dirname+"/../files/image_conversion/test.jpg",
+                destination: __dirname+"/../files/",
                 filename: "EBYS.jpg",
                 originalname: "EBYS.jpg"
             };
@@ -188,8 +189,8 @@ describe('File processing functions', function () {
 
         it('will fail on empty extension', function (done) {
             var correctValue = {
-                path: "../files/EBYS.jpg",
-                destination: "../files/",
+                path: __dirname+"/../files/image_conversion/test.jpg",
+                destination: __dirname+"/../files/",
                 filename: "EBYS.jpg",
                 originalname: "jpg"
             };
@@ -197,13 +198,14 @@ describe('File processing functions', function () {
             expect(result.message).to.exist;
             expect(result.extension).to.not.exist;
             assert.equal(result.type, "error");
-            assert.equal(result.message, "File type not allowed");
+            assert.equal(result.message, "File must have an extension");
+            done();
         });
 
         it('will fail on not allowed extension', function (done) {
             var correctValue = {
-                path: "../files/EBYS.jpg",
-                destination: "../files/",
+                path: __dirname+"/../files/image_conversion/test.jpg",
+                destination: __dirname+"/../files/",
                 filename: "EBYS.jpg",
                 originalname: "EBYS.xcf"
             };
@@ -212,20 +214,22 @@ describe('File processing functions', function () {
             expect(result.extension).to.not.exist;
             assert.equal(result.type, "error");
             assert.equal(result.message, "File type not allowed");
+            done();
         });
 
         it('will not fail on correct information', function (done) {
             var correctValue = {
-                path: "../files/EBYS.jpg",
-                destination: "../files/",
+                path: __dirname+"/../files/image_conversion/test.jpg",
+                destination: __dirname+"/../files/",
                 filename: "EBYS.jpg",
                 originalname: "EBYS.jpg"
             };
             var result = fileProcessor23.checkFileContent(correctValue, testSettings.allowedExtensions);
-            expect(result.message).to.exist;
+            expect(result.message).to.not.exist;
             expect(result.extension).to.exist;
             assert.equal(result.type, "ok");
             assert.equal(result.extension, "jpg");
+            done();
         });
 
     });
@@ -248,7 +252,7 @@ describe('File processing functions', function () {
                     if (error) {
                         done(error);
                     } else {
-                        if (!fs.existsSync("../files/archive/ABCDECBS09654324561712.jpg") || fs.existsSync("../files/image_conversion/test.jpg")) {
+                        if (!fs.existsSync(__dirname+"/../files/archive/ABCDECBS09654324561712.jpg") || fs.existsSync(__dirname+"/../files/image_conversion/test.jpg")) {
                             done(new Error("No error raised but file has not been moved"));
                         }
                         //put back the file
@@ -256,16 +260,16 @@ describe('File processing functions', function () {
                                 if (error) {
                                     done(error);
                                 } else {
-                                    if (fs.existsSync("../files/archive/ABCDECBS09654324561712.jpg") || !fs.existsSync("../files/image_conversion/test.jpg")) {
+                                    if (fs.existsSync(__dirname+"/../files/archive/ABCDECBS09654324561712.jpg") || !fs.existsSync(__dirname+"/../files/image_conversion/test.jpg")) {
                                         done(new Error("No error raised but file has not been moved"));
                                     } else {
                                         done();
                                     }
                                 }
-                            }, "../files/archive", "../files/image_conversion",
-                            "ABCDECBS09654324561712", "test", "jpg")
+                            }, __dirname+"/../files/archive", __dirname+"/../files/image_conversion",
+                            "ABCDECBS09654324561712.jpg", "test", "jpg")
                     }
-                }, "../files/image_conversion", "../files/archive", "test",
+                }, __dirname+"/../files/image_conversion", __dirname+"/../files/archive", "test.jpg",
                 "ABCDECBS09654324561712", "jpg");
         });
     });
@@ -285,38 +289,38 @@ describe('File processing functions', function () {
 
         it(' will not fail on ppt file', function (done) {
             fileProcessor23.convertUsingOffice(function (error) {
-                conversionHandler(error, done, false, "");
-            }, "../files/office_conversion/test.ppt");
+                conversionHandler(error, done, false, "",true);
+            }, __dirname+"/../files/office_conversion/test.ppt");
         });
 
         it(' will not fail on pptx file', function (done) {
             fileProcessor23.convertUsingOffice(function (error) {
-                conversionHandler(error, done, false, "");
-            }, "../files/office_conversion/test.pptx");
+                conversionHandler(error, done, false, "",true);
+            }, __dirname+"/../files/office_conversion/test.pptx");
         });
 
         it(' will not fail on doc file', function (done) {
             fileProcessor23.convertUsingOffice(function (error) {
-                conversionHandler(error, done, false, "");
-            }, "../files/office_conversion/test.doc");
+                conversionHandler(error, done, false, "",true);
+            }, __dirname+"/../files/office_conversion/test.doc");
         });
 
         it(' will not fail on docx file', function (done) {
             fileProcessor23.convertUsingOffice(function (error) {
-                conversionHandler(error, done, false, "");
-            }, "../files/office_conversion/test.docx");
+                conversionHandler(error, done, false, "",true);
+            }, __dirname+"/../files/office_conversion/test.docx");
         });
 
         it(' will not fail on xls file', function (done) {
             fileProcessor23.convertUsingOffice(function (error) {
-                conversionHandler(error, done, false, "");
-            }, "../files/office_conversion/test.xls");
+                conversionHandler(error, done, false, "",true);
+            }, __dirname+"/../files/office_conversion/test.xls");
         });
 
         it(' will not fail on xlsx file', function (done) {
             fileProcessor23.convertUsingOffice(function (error) {
-                conversionHandler(error, done, false, "");
-            }, "../files/office_conversion/test.xlsx");
+                conversionHandler(error, done, false, "",true);
+            }, __dirname+"/../files/office_conversion/test.xlsx");
         });
 
     });
@@ -335,44 +339,44 @@ describe('File processing functions', function () {
 
         it(' will not fail on jpg file', function (done) {
             fileProcessor23.convertUsingImageMagick(function (error) {
-                conversionHandler(error, done, false, "");
-            }, "../files/image_conversion/test.jpg", "../files/image_conversion/test.pdf");
+                conversionHandler(error, done, false, "",false);
+            }, __dirname+"/../files/image_conversion/test.jpg", __dirname+"/../files/image_conversion/test.pdf");
         });
 
         it(' will not fail on jpeg file', function (done) {
             fileProcessor23.convertUsingImageMagick(function (error) {
-                conversionHandler(error, done, false, "");
-            }, "../files/image_conversion/test.jpeg", "../files/image_conversion/test.pdf");
+                conversionHandler(error, done, false, "",false);
+            }, __dirname+"/../files/image_conversion/test.jpeg", __dirname+"/../files/image_conversion/test.pdf");
         });
 
         it(' will not fail on bmp file', function (done) {
             fileProcessor23.convertUsingImageMagick(function (error) {
-                conversionHandler(error, done, false, "");
-            }, "../files/image_conversion/test.bmp", "../files/image_conversion/test.pdf");
+                conversionHandler(error, done, false, "",false);
+            }, __dirname+"/../files/image_conversion/test.bmp", __dirname+"/../files/image_conversion/test.pdf");
         });
 
         it(' will not fail on gif file', function (done) {
             fileProcessor23.convertUsingImageMagick(function (error) {
-                conversionHandler(error, done, false, "");
-            }, "../files/image_conversion/test.gif", "../files/image_conversion/test.pdf");
+                conversionHandler(error, done, false, "",false);
+            }, __dirname+"/../files/image_conversion/test.gif", __dirname+"/../files/image_conversion/test.pdf");
         });
 
         it(' will not fail on png file', function (done) {
             fileProcessor23.convertUsingImageMagick(function (error) {
-                conversionHandler(error, done, false, "");
-            }, "../files/image_conversion/test.png", "../files/image_conversion/test.pdf");
+                conversionHandler(error, done, false, "",false);
+            }, __dirname+"/../files/image_conversion/test.png", __dirname+"/../files/image_conversion/test.pdf");
         });
 
         it(' will not fail on tif file', function (done) {
             fileProcessor23.convertUsingImageMagick(function (error) {
-                conversionHandler(error, done, false, "");
-            }, "../files/image_conversion/test.tif", "../files/image_conversion/test.pdf");
+                conversionHandler(error, done, false, "",false);
+            }, __dirname+"/../files/image_conversion/test.tif", __dirname+"/../files/image_conversion/test.pdf");
         });
 
         it(' will not fail on tiff file', function (done) {
             fileProcessor23.convertUsingImageMagick(function (error) {
-                conversionHandler(error, done, true, "");
-            }, "../files/image_conversion/test.tiff", "../files/image_conversion/test.pdf");
+                conversionHandler(error, done, true, "",false);
+            }, __dirname+"/../files/image_conversion/test.tiff", __dirname+"/../files/image_conversion/test.pdf");
         });
     });
 
@@ -391,12 +395,11 @@ describe('File processing functions', function () {
 
         it(' will not fail on correct information', function (done) {
             fileProcessor23.compressPdf(function (error) {
-                conversionHandler(error, done, true, "_usage");
-            }, "../files/image_conversion/test.pdf", "../files/image_conversion/test_usage.pdf");
+                conversionHandler(error, done, true, "_usage",false);
+            }, __dirname+"/../files/image_conversion/test.pdf", __dirname+"/../files/image_conversion/test_usage.pdf");
         });
 
     });
-
 
     describe('Create thumbnail using imagemagick function', function () {
         it(' will fail when original file is not found', function (done) {
@@ -411,8 +414,8 @@ describe('File processing functions', function () {
 
         it(' will not fail on correct information', function (done) {
             fileProcessor23.compressPdf(function (error) {
-                conversionHandler(error, done, true, "_thumb");
-            }, "../files/image_conversion/test_usage.pdf", "../files/image_conversion/test_thumb.pdf");
+                conversionHandler(error, done, true, "_thumb",false);
+            }, __dirname+"/../files/image_conversion/test_usage.pdf", __dirname+"/../files/image_conversion/test_thumb.pdf");
         });
     });
 
@@ -420,7 +423,7 @@ describe('File processing functions', function () {
     describe('Remove obsolete file function', function () {
 
         it(' will remove the correct file on do not use original as master', function (done) {
-            exec("cp ../files/image_conversion/test.doc ../files/image_conversion/test_1.doc", function (error) {
+            exec("cp "+__dirname+"/../files/image_conversion/test.jpg "+__dirname+"/../files/image_conversion/test_1.jpg", function (error) {
                 if (error) {
                     done(error);
                 } else {
@@ -428,13 +431,13 @@ describe('File processing functions', function () {
                         if (error) {
                             done(error);
                         } else {
-                            if (fs.existsSync("../files/image_conversion/test_1.doc")) {
+                            if (fs.existsSync(__dirname+"/../files/image_conversion/test_1.jpg")) {
                                 done(new Error("System did not threw error but the file is not deleted"));
                             } else {
                                 done();
                             }
                         }
-                    }, "../files/image_conversion/test_1.doc", "../files/image_conversion/test.pdf", false);
+                    }, __dirname+"/../files/image_conversion/test_1.jpg", __dirname+"/../files/image_conversion/test.pdf", false);
                 }
             });
 
@@ -445,18 +448,24 @@ describe('File processing functions', function () {
                 if (error) {
                     done(error);
                 } else {
-                    if (fs.existsSync("../files/image_conversion/test.pdf")) {
+                    if (fs.existsSync(__dirname+"/../files/image_conversion/test.pdf")) {
                         done(new Error("System did not threw error but the file is not deleted"));
                     } else {
                         done();
                     }
                 }
-            }, "../files/image_conversion/test.doc", "../files/image_conversion/test.pdf", false);
+            }, __dirname+"/../files/image_conversion/test.jpg", __dirname+"/../files/image_conversion/test.pdf", false);
         });
 
 
         it(" will remove the usage copy of the pdf", function (done) {
-            exec("rm -y ../files/image_conversion/test_usage.pdf", function (error) {
+            exec("rm -f "+__dirname+"/../files/image_conversion/test_usage.pdf", function (error) {
+                done(error);
+            });
+        });
+
+        it(" will remove the thumbnail of the pdf", function (done) {
+            exec("rm -f "+__dirname+"/../files/image_conversion/test_thumb.pdf", function (error) {
                 done(error);
             });
         });
