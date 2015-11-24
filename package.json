@@ -2,8 +2,7 @@
   "name": "archive",
   "version": "0.0.1",
   "scripts": {
-    "test": "mocha --recursive ",
-    "cover": "istanbul cover _mocha"
+    "test": "./node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- --recursive"
   },
   "dependencies": {
     "express": "~4.13.3",
@@ -15,6 +14,8 @@
   },
   "devDependencies": {
     "chai": "~3.4.1",
-    "mocha": "~2.3.4"
+    "mocha": "~2.3.4",
+    "istanbul": "~0.4.0",
+    "coveralls": "~2.11.4"
   }
 }
