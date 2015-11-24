@@ -309,7 +309,7 @@ describe('File processing functions', function () {
         });
 
         it(' will not fail on docx file', function (done) {
-            this.timeout(15000);
+            this.timeout(20000);
             fileProcessor23.convertUsingOffice(function (error) {
                 conversionHandler(error, done, false, "",true);
             }, __dirname+"/../files/office_conversion/test.docx");
