@@ -4,7 +4,6 @@ var app = express(); //initializes an express app
 var fs = require('fs'); //enables file system functions
 var multer = require('multer'); //enables uploading files
 var winston = require('winston');//enable logging
-var moment=require('moment');
 var logger = new(winston.Logger)({
     exitOnError: false,
     transports: [
