@@ -288,36 +288,42 @@ describe('File processing functions', function () {
         });
 
         it(' will not fail on ppt file', function (done) {
+            this.timeout(20000);
             fileProcessor23.convertUsingOffice(function (error) {
                 conversionHandler(error, done, false, "",true);
             }, __dirname+"/../files/office_conversion/test.ppt");
         });
 
         it(' will not fail on pptx file', function (done) {
+            this.timeout(10000);
             fileProcessor23.convertUsingOffice(function (error) {
                 conversionHandler(error, done, false, "",true);
             }, __dirname+"/../files/office_conversion/test.pptx");
         });
 
         it(' will not fail on doc file', function (done) {
+            this.timeout(10000);
             fileProcessor23.convertUsingOffice(function (error) {
                 conversionHandler(error, done, false, "",true);
             }, __dirname+"/../files/office_conversion/test.doc");
         });
 
         it(' will not fail on docx file', function (done) {
+            this.timeout(10000);
             fileProcessor23.convertUsingOffice(function (error) {
                 conversionHandler(error, done, false, "",true);
             }, __dirname+"/../files/office_conversion/test.docx");
         });
 
         it(' will not fail on xls file', function (done) {
+            this.timeout(10000);
             fileProcessor23.convertUsingOffice(function (error) {
                 conversionHandler(error, done, false, "",true);
             }, __dirname+"/../files/office_conversion/test.xls");
         });
 
         it(' will not fail on xlsx file', function (done) {
+            this.timeout(10000);
             fileProcessor23.convertUsingOffice(function (error) {
                 conversionHandler(error, done, false, "",true);
             }, __dirname+"/../files/office_conversion/test.xlsx");
@@ -454,7 +460,7 @@ describe('File processing functions', function () {
                         done();
                     }
                 }
-            }, __dirname+"/../files/image_conversion/test.jpg", __dirname+"/../files/image_conversion/test.pdf", false);
+            }, __dirname+"/../files/image_conversion/test.jpg", __dirname+"/../files/image_conversion/test.pdf", true);
         });
 
 
