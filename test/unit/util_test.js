@@ -604,7 +604,7 @@ describe('File processing functions', function () {
         });
 
         it(' will process xlsx as planned',function(done){
-            this.timeout(50000);
+            this.timeout(60000);
             fileProcessor23.processFile(createFileInfo(10),function(status,message){
                 controlFiles(done,status,message,"xlsx");
             });
