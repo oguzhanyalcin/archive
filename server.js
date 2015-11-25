@@ -18,7 +18,7 @@ if (!settings.directoryNameLength || settings.directoryNameLength < 1) {
 
 
 //=================================SERVER INIT SCRIPT=============================================//
-app.listen(settings.serverPort, function () {
+var server=app.listen(settings.serverPort, function () {
     var host = server.address().address;
     var port = server.address().port;
 
