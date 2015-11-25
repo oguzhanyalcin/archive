@@ -8,15 +8,11 @@ var winston = require('winston');//enable logging
 var logger = new(winston.Logger)({
     exitOnError: false,
     transports: [
-        new(winston.transports.DailyRotateFile)({
-            filename: __dirname + '/logs/server.info.log',
-            datePattern: '.yyyyMMddHH',
-            level: 'info'
-        }),
-        new(winston.transports.DailyRotateFile)({
-            filename: __dirname + '/logs/server.error.log',
-            datePattern: '.yyyyMMddHH',
-            level: 'error'
+        new (winston.transports.File)({
+            filename: __dirname + '/logs/server.log',
+            maxFiles: 50,
+            maxsize: 1024*1024,
+            json:false
         }),
         new(winston.transports.Console)({
             colorize: true
@@ -42,10 +38,6 @@ var downloadOptions={
     }
 };
 //================================================================================================//
-
-
-
-
 
 //====================================ROUTES======================================================//
 /**
