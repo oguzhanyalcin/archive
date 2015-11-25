@@ -7,6 +7,14 @@
   "officeSocketIp": "127.0.0.1",
   "officeSocketPort": 2220,
   "allowedExtensions": {
+    "tif": {
+      "useOriginalAsMaster": false,
+      "officeConversion": false
+    },
+    "tiff": {
+      "useOriginalAsMaster": false,
+      "officeConversion": false
+    },
     "jpg": {
       "useOriginalAsMaster": false,
       "officeConversion": false

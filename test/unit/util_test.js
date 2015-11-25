@@ -14,6 +14,14 @@ var testSettings = {
     officeSocketIp: "127.0.0.1",
     officeSocketPort: 2220,
     allowedExtensions: {
+        tif: {
+            useOriginalAsMaster: false,
+            officeConversion: false
+        },
+        tiff: {
+            useOriginalAsMaster: false,
+            officeConversion: false
+        },
         jpg: {
             useOriginalAsMaster: false,
             officeConversion: false
@@ -419,147 +427,6 @@ describe('File processing functions', function () {
         });
     });
 
-    describe('Process file function will work as needed', function () {
-
-        var files=[
-            {path:"image_conversion/test.jpg",filename:"test.jpg"},
-            {path:"image_conversion/test.jpeg",filename:"test.jpeg"},
-            {path:"image_conversion/test.bmp",filename:"test.bmp"},
-            {path:"image_conversion/test.png",filename:"test.png"},
-            {path:"image_conversion/test.tif",filename:"test.tif"},
-            {path:"image_conversion/test.tiff",filename:"test.tiff"},
-            {path:"image_conversion/test.gif",filename:"test.gif"},
-            {path:"office_conversion/test.doc",filename:"test.doc"},
-            {path:"office_conversion/test.docx",filename:"test.docx"},
-            {path:"office_conversion/test.xls",filename:"test.xls"},
-            {path:"office_conversion/test.xlsx",filename:"test.xlsx"},
-            {path:"office_conversion/test.ppt",filename:"test.ppt"},
-            {path:"office_conversion/test.pptx",filename:"test.pptx"}
-        ];
-
-        /**
-         * controls successful result from the process file method
-         * @param {function} callback   callback function for mocha
-         * @param {number}   status     response status
-         * @param {string}   message    message returned from function
-         * @param {string}   extension  extension of the current file processed
-         */
-        function controlFiles(callback,status,message,extension){
-            assert.equal(status,200);
-            assert.equal(message.length,32);
-            var path=setttings.archiveRoot+"/"+fileProcessor23.returnStoragePath(message);
-            var originalFile=path+"/"+message+"."+(settings.allowedExtensions[extension].useOriginalAsMaster?extension:"pdf");
-            var usageFile=path+"/"+message+"_usage.pdf";
-            var thumbFile=path+"/"+message+"thumb.jpg";
-            var errors=[]
-            if (!fs.existsSync(originalFile) ) {
-                errors.push(new Error("System did not threw error, but the original file is not created"));
-            }
-            if (!fs.existsSync(usageFile) ) {
-                errors.push(new Error("System did not threw error but the usage file is not created"));
-            }
-            if (!fs.existsSync(thumbFile) ) {
-                errors.push(new Error("System did not threw error but the thumb file is not created"));
-            }
-            if(errors.length>0) {
-                callback(errors);
-            }else{
-                callback();
-            }
-        }
-
-        /**
-         * creates a file object for simulating upload process.
-         * @param   {number}    key     order of the file currently being processed
-         * @returns {{path: string, destination: string, filename: string, originalname: string}}
-         */
-        function createFileInfo(key){
-            return {
-                path: __dirname+"/../files/"+files[key].path,
-                destination: __dirname+"/../files/",
-                filename: files[key].filename,
-                originalname:  files[key].filename
-            };
-        }
-
-        it(' will process jpg as planned',function(done){
-            fileProcessor23.processFile(createFileInfo(0),function(status,message){
-                controlFiles(done,status,message,"jpg");
-            });
-        });
-
-        it(' will process jpeg as planned',function(done){
-            fileProcessor23.processFile(createFileInfo(1),function(status,message){
-                controlFiles(done,status,message,"jpg");
-            });
-        });
-
-        it(' will process bmp as planned',function(done){
-            fileProcessor23.processFile(createFileInfo(2),function(status,message){
-                controlFiles(done,status,message,"jpg");
-            });
-        });
-
-        it(' will process png as planned',function(done){
-            fileProcessor23.processFile(createFileInfo(3),function(status,message){
-                controlFiles(done,status,message,"jpg");
-            });
-        });
-        it(' will process tif as planned',function(done){
-            fileProcessor23.processFile(createFileInfo(4),function(status,message){
-                controlFiles(done,status,message,"jpg");
-            });
-        });
-        it(' will process tiff as planned',function(done){
-            fileProcessor23.processFile(createFileInfo(5),function(status,message){
-                controlFiles(done,status,message,"jpg");
-            });
-        });
-
-        it(' will process gif as planned',function(done){
-            fileProcessor23.processFile(createFileInfo(6),function(status,message){
-                controlFiles(done,status,message,"jpg");
-            });
-        });
-
-        it(' will process doc as planned',function(done){
-            fileProcessor23.processFile(createFileInfo(7),function(status,message){
-                controlFiles(done,status,message,"jpg");
-            });
-        });
-
-        it(' will process docx as planned',function(done){
-            fileProcessor23.processFile(createFileInfo(8),function(status,message){
-                controlFiles(done,status,message,"jpg");
-            });
-        });
-
-        it(' will process xls as planned',function(done){
-            fileProcessor23.processFile(createFileInfo(9),function(status,message){
-                controlFiles(done,status,message,"jpg");
-            });
-        });
-
-        it(' will process xlsx as planned',function(done){
-            fileProcessor23.processFile(createFileInfo(10),function(status,message){
-                controlFiles(done,status,message,"jpg");
-            });
-        });
-
-        it(' will process ppt as planned',function(done){
-            fileProcessor23.processFile(createFileInfo(11),function(status,message){
-                controlFiles(done,status,message,"jpg");
-            });
-        });
-
-        it(' will process pptxx as planned',function(done){
-            fileProcessor23.processFile(createFileInfo(12),function(status,message){
-                controlFiles(done,status,message,"jpg");
-            });
-        });
-    });
-
-
 
     describe('Remove obsolete file function', function () {
         it(' will remove the correct file on do not use original as master', function (done) {
@@ -612,5 +479,150 @@ describe('File processing functions', function () {
     });
 
 
+    describe('Process file function will work as needed', function () {
+
+        var files=[
+            {path:"image_conversion/test.jpg",filename:"test.jpg",folder:"image_conversion"},
+            {path:"image_conversion/test.jpeg",filename:"test.jpeg",folder:"image_conversion"},
+            {path:"image_conversion/test.bmp",filename:"test.bmp",folder:"image_conversion"},
+            {path:"image_conversion/test.png",filename:"test.png",folder:"image_conversion"},
+            {path:"image_conversion/test.tif",filename:"test.tif",folder:"image_conversion"},
+            {path:"image_conversion/test.tiff",filename:"test.tiff",folder:"image_conversion"},
+            {path:"image_conversion/test.gif",filename:"test.gif",folder:"image_conversion"},
+            {path:"office_conversion/test.doc",filename:"test.doc",folder:"office_conversion"},
+            {path:"office_conversion/test.docx",filename:"test.docx",folder:"office_conversion"},
+            {path:"office_conversion/test.xls",filename:"test.xls",folder:"office_conversion"},
+            {path:"office_conversion/test.xlsx",filename:"test.xlsx",folder:"office_conversion"},
+            {path:"office_conversion/test.ppt",filename:"test.ppt",folder:"office_conversion"},
+            {path:"office_conversion/test.pptx",filename:"test.pptx",folder:"office_conversion"}
+        ];
+
+        /**
+         * controls successful result from the process file method
+         * @param {function} callback   callback function for mocha
+         * @param {number}   status     response status
+         * @param {string}   message    message returned from function
+         * @param {string}   extension  extension of the current file processed
+         */
+        function controlFiles(callback,status,message,extension){
+            assert.equal(status,200);
+            assert.equal(message.length,32);
+            var path=testSettings.archiveRoot+"/"+fileProcessor23.returnStoragePath(message);
+            var originalFile=path+"/"+message+"."+(testSettings.allowedExtensions[extension].useOriginalAsMaster?extension:"pdf");
+            var usageFile=path+"/"+message+"_usage.pdf";
+            var thumbFile=path+"/"+message+"_thumb.jpg";
+            var errors=[]
+            if (!fs.existsSync(originalFile) ) {
+                errors.push(new Error("System did not threw error, but the original file is not created"));
+            }
+            if (!fs.existsSync(usageFile) ) {
+                errors.push(new Error("System did not threw error but the usage file is not created"));
+            }
+            if (!fs.existsSync(thumbFile) ) {
+                errors.push(new Error("System did not threw error but the thumb file is not created"));
+            }
+            if(errors.length>0) {
+                console.log(errors);
+                callback(errors[0]);
+            }else{
+                callback();
+            }
+        }
+
+        /**
+         * creates a file object for simulating upload process.
+         * @param   {number}    key     order of the file currently being processed
+         * @returns {{path: string, destination: string, filename: string, originalname: string}}
+         */
+        function createFileInfo(key){
+            return {
+                path: __dirname+"/../files/"+files[key].path,
+                destination: __dirname+"/../files/"+files[key].folder,
+                filename: files[key].filename,
+                originalname:  files[key].filename
+            };
+        }
+
+        it(' will process jpg as planned',function(done){
+            fileProcessor23.processFile(createFileInfo(0),function(status,message){
+                controlFiles(done,status,message,"jpg");
+            });
+        });
+
+        it(' will process jpeg as planned',function(done){
+            fileProcessor23.processFile(createFileInfo(1),function(status,message){
+                controlFiles(done,status,message,"jpeg");
+            });
+        });
+
+        it(' will process bmp as planned',function(done){
+            fileProcessor23.processFile(createFileInfo(2),function(status,message){
+                controlFiles(done,status,message,"bmp");
+            });
+        });
+
+        it(' will process png as planned',function(done){
+            fileProcessor23.processFile(createFileInfo(3),function(status,message){
+                controlFiles(done,status,message,"png");
+            });
+        });
+        it(' will process tif as planned',function(done){
+            fileProcessor23.processFile(createFileInfo(4),function(status,message){
+                controlFiles(done,status,message,"tif");
+            });
+        });
+        it(' will process tiff as planned',function(done){
+            fileProcessor23.processFile(createFileInfo(5),function(status,message){
+                controlFiles(done,status,message,"tiff");
+            });
+        });
+
+        it(' will process gif as planned',function(done){
+            fileProcessor23.processFile(createFileInfo(6),function(status,message){
+                controlFiles(done,status,message,"gif");
+            });
+        });
+
+        it(' will process doc as planned',function(done){
+            fileProcessor23.processFile(createFileInfo(7),function(status,message){
+                controlFiles(done,status,message,"doc");
+            });
+        });
+
+        it(' will process docx as planned',function(done){
+            this.timeout(60000);
+            fileProcessor23.processFile(createFileInfo(8),function(status,message){
+                controlFiles(done,status,message,"docx");
+            });
+        });
+
+        it(' will process xls as planned',function(done){
+            this.timeout(20000);
+            fileProcessor23.processFile(createFileInfo(9),function(status,message){
+                controlFiles(done,status,message,"xls");
+            });
+        });
+
+        it(' will process xlsx as planned',function(done){
+            this.timeout(50000);
+            fileProcessor23.processFile(createFileInfo(10),function(status,message){
+                controlFiles(done,status,message,"xlsx");
+            });
+        });
+
+        it(' will process ppt as planned',function(done){
+            this.timeout(50000);
+            fileProcessor23.processFile(createFileInfo(11),function(status,message){
+                controlFiles(done,status,message,"ppt");
+            });
+        });
+
+        it(' will process pptx as planned',function(done){
+            this.timeout(40000);
+            fileProcessor23.processFile(createFileInfo(12),function(status,message){
+                controlFiles(done,status,message,"pptx");
+            });
+        });
+    });
 });
 
