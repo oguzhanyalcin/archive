@@ -4,6 +4,8 @@ var express = require('express'); //loads the express.js library
 var app = express(); //initializes an express app
 var fs = require('fs'); //enables file system functions
 var multer = require('multer'); //enables uploading files
+var path=require('path');//enables path based operations
+var crypto=require('crypto');//enables crypto operations
 var winston = require('winston');//enable logging
 var logger = new(winston.Logger)({
     exitOnError: false,
@@ -29,7 +31,17 @@ try {
     logger.log('error',ex);
     return;
 }
-var upload = multer({dest: settings.temporaryUploadPath}); //enable upload functionality
+
+var storage = multer.diskStorage({
+    destination: settings.temporaryUploadPath,
+    filename: function (req, file, cb) {
+        crypto.pseudoRandomBytes(16, function (err, raw) {
+            if (err) return cb(err)
+            cb(null, raw.toString('hex').toUpperCase() + path.extname(file.originalname))
+        })
+    }
+});
+var upload = multer({storage: storage}); //enable upload functionality
 var fileProcessor = require('./lib/FileProcessor.js')(settings);//File processing helper
 var downloadOptions={
     headers: {
@@ -72,26 +84,26 @@ app.get('/:hash/:size', function (request, response) {
         return;
     }
     var extraInfo=size==1?"_usage":(size==2?"_thumb":"");
-    var path=fileProcessor.returnStoragePath(hash);
-    fs.readdir(path,function(error,files){
+    var localPath=settings.archiveRoot+"/"+fileProcessor.returnStoragePath(hash);
+    fs.readdir(localPath,function(error,files){
         if(error){
-            logger.log('error','File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + path + ' Error is: '+error);
+            logger.log('error','File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + localPath + ' Error is: '+error);
             response.type('json').status(error.status).end();
             return;
         }
         var filesToProcess=files.filter(function (file) {
-            return  file.startsWith("/"+hash+extraInfo) && fs.statSync(file).isFile() ;
+            return  size==0?!file.startsWith(hash+"_"):file.startsWith(hash+extraInfo) ;
         }).map(function (file) {
-            return path.join(path, file);
+            return path.join(localPath, file);
         });
         if(!filesToProcess || filesToProcess.length===0){
-            logger.log('error','File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + path+' Error is: File not found');
+            logger.log('error','File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + localPath+' Error is: File not found');
             response.type('json').status(error.status).end();
             return;
         }
         response.sendFile(filesToProcess[0],downloadOptions,function(error){
             if(error){
-                logger.log('error','File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + path + ' Error is: '+error);
+                logger.log('error','File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + localPath + ' Error is: '+error);
                 response.type('json').status(error.status).end();
                 return;
             }

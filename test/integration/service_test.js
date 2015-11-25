@@ -5,6 +5,7 @@ var fs = require('fs');
 var module = require('../../index.js');
 var fileProcessor = require('../../lib/FileProcessor.js')(module.settings);
 var service = require('supertest')(module.app);
+var exec = require('child_process').exec; //allows calling shell scripts as child processes
 
 describe('Folder Type REST services ', function () {
 
@@ -38,17 +39,17 @@ describe('Folder Type REST services ', function () {
     }
 
     function checkDownloadResult(error, response, done,type,extension) {
-        if (error) {
-            done(err);
-            return;
+        if(error){
+            return done(error);
         }
+        assert.equal(200,response.status);
         assert.ok(Buffer.isBuffer(response.body));
         fs.writeFile(__dirname + "/../files/tmp/download", response.body, function (error) {
             if (error) {
                 return done(error);
             }
-            var addon=type===1?"_usage":(type===2?"_thumb":"")
-            exec("cmp --silent " + __dirname + "/../files/archive/" + files[key].hash + addon+"."+(module.settings.allowedExtensions[extension].useOriginalAsMaster?extension:"pdf") + " "+__dirname + "/../files/tmp/download", function (error) {
+            var addon=type===1?"_usage.pdf":(type===2?"_thumb.jpg":("."+(module.settings.allowedExtensions[extension].useOriginalAsMaster?extension:"pdf")));
+            exec("cmp --silent " + module.settings.archiveRoot + "/" + fileProcessor.returnStoragePath(files[key].hash) +"/"+files[key].hash+ addon+" "+__dirname + "/../files/tmp/download", function (error) {
                 var masterError = error;
                 exec("rm -f " + __dirname + "/../files/tmp/download", function (error) {
                     done((masterError ? masterError : error));
@@ -63,11 +64,12 @@ describe('Folder Type REST services ', function () {
      * @param {number}   status     response status
      * @param {string}   message    message returned from function
      * @param {string}   extension  extension of the current file processed
+     * @param {number}   localKey   localKey of the file in the files array
      */
-    function controlFiles(callback, status, message, extension) {
+    function controlFiles(callback, status, message, extension,localKey) {
         assert.equal(status, 200);
         assert.equal(message.length, 32);
-        files[key].md5 = message;
+        files[localKey].hash = message;
         var path = module.settings.archiveRoot + "/" + fileProcessor.returnStoragePath(message);
         var originalFile = path + "/" + message + "." + (module.settings.allowedExtensions[extension].useOriginalAsMaster ? extension : "pdf");
         var usageFile = path + "/" + message + "_usage.pdf";
@@ -95,159 +97,120 @@ describe('Folder Type REST services ', function () {
 
             it('will upload and store jpg ', function (done) {
                 service.post("/")
-                    .attach('archiveFile', __dirname + '/../files/' + files[key++].path)
-                    .send()
-                    .expect(function (err, res) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        controlFiles(done, res.status, res.body.message, "jpg");
+                    .attach('archiveFile', __dirname + '/../files/' + files[0].path)
+                    .end()
+                    .expect(function (res) {
+                        controlFiles(done, res.status, res.body.message, "jpg",0);
                     });
             });
 
             it('will upload and store jpeg ', function (done) {
                 service.post("/")
-                    .attach('archiveFile', __dirname + '/../files/' + files[key++].path)
-                    .send()
-                    .expect(function (err, res) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        controlFiles(done, res.status, res.body.message, "jpeg");
+                    .attach('archiveFile', __dirname + '/../files/' + files[1].path)
+                    .end()
+                    .expect(function ( res) {
+                        controlFiles(done, res.status, res.body.message, "jpeg",1);
                     });
             });
 
             it('will upload and store bmp ', function (done) {
                 service.post("/")
-                    .attach('archiveFile', __dirname + '/../files/' + files[key++].path)
-                    .send()
-                    .expect(function (err, res) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        controlFiles(done, res.status, res.body.message, "bmp");
+                    .attach('archiveFile', __dirname + '/../files/' + files[2].path)
+                    .end()
+                    .expect(function ( res) {
+                        controlFiles(done, res.status, res.body.message, "bmp",2);
                     });
             });
 
 
             it('will upload and store png ', function (done) {
                 service.post("/")
-                    .attach('archiveFile', __dirname + '/../files/' + files[key++].path)
-                    .send()
-                    .expect(function (err, res) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        controlFiles(done, res.status, res.body.message, "png");
+                    .attach('archiveFile', __dirname + '/../files/' + files[3].path)
+                    .end()
+                    .expect(function ( res) {
+                        controlFiles(done, res.status, res.body.message, "png",3);
                     });
             });
 
 
             it('will upload and store tif ', function (done) {
                 service.post("/")
-                    .attach('archiveFile', __dirname + '/../files/' + files[key++].path)
-                    .send()
-                    .expect(function (err, res) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        controlFiles(done, res.status, res.body.message, "tiff");
+                    .attach('archiveFile', __dirname + '/../files/' + files[4].path)
+                    .end()
+                    .expect(function ( res) {
+                        controlFiles(done, res.status, res.body.message, "tif",4);
+                    });
+            });
+
+            it('will upload and store tiff ', function (done) {
+                service.post("/")
+                    .attach('archiveFile', __dirname + '/../files/' + files[5].path)
+                    .end()
+                    .expect(function ( res) {
+                        controlFiles(done, res.status, res.body.message, "tiff",4);
                     });
             });
 
 
             it('will upload and store gif ', function (done) {
                 service.post("/")
-                    .attach('archiveFile', __dirname + '/../files/' + files[key++].path)
-                    .send()
-                    .expect(function (err, res) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        controlFiles(done, res.status, res.body.message, "gif");
+                    .attach('archiveFile', __dirname + '/../files/' + files[6].path)
+                    .end()
+                    .expect(function ( res) {
+                        controlFiles(done, res.status, res.body.message, "gif",6);
                     });
             });
 
             it('will upload and store doc ', function (done) {
                 service.post("/")
-                    .attach('archiveFile', __dirname + '/../files/' + files[key++].path)
-                    .send()
-                    .expect(function (err, res) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        controlFiles(done, res.status, res.body.message, "doc");
+                    .attach('archiveFile', __dirname + '/../files/' + files[7].path)
+                    .end()
+                    .expect(function (res) {
+                        controlFiles(done, res.status, res.body.message, "doc",7);
                     });
             });
 
             it('will upload and store docx ', function (done) {
                 service.post("/")
-                    .attach('archiveFile', __dirname + '/../files/' + files[key++].path)
-                    .send()
-                    .expect(function (err, res) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        controlFiles(done, res.status, res.body.message, "docx");
+                    .attach('archiveFile', __dirname + '/../files/' + files[8].path)
+                    .end()
+                    .expect(function ( res) {
+                        controlFiles(done, res.status, res.body.message, "docx",8);
                     });
             });
 
             it('will upload and store xls ', function (done) {
                 service.post("/")
-                    .attach('archiveFile', __dirname + '/../files/' + files[key++].path)
-                    .send()
-                    .expect(function (err, res) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        controlFiles(done, res.status, res.body.message, "xls");
+                    .attach('archiveFile', __dirname + '/../files/' + files[9].path)
+                    .end()
+                    .expect(function ( res) {
+                        controlFiles(done, res.status, res.body.message, "xls",9);
                     });
             });
 
             it('will upload and store xlsx ', function (done) {
                 service.post("/")
-                    .attach('archiveFile', __dirname + '/../files/' + files[key++].path)
-                    .send()
-                    .expect(function (err, res) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        controlFiles(done, res.status, res.body.message, "xlsx");
+                    .attach('archiveFile', __dirname + '/../files/' + files[10].path)
+                    .end()
+                    .expect(function ( res) {
+                        controlFiles(done, res.status, res.body.message, "xlsx",10);
                     });
             });
 
             it('will upload and store ppt ', function (done) {
                 service.post("/")
-                    .attach('archiveFile', __dirname + '/../files/' + files[key++].path)
-                    .send()
-                    .expect(function (err, res) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        controlFiles(done, res.status, res.body.message, "ppt");
+                    .attach('archiveFile', __dirname + '/../files/' + files[11].path)
+                    .end()
+                    .expect(function ( res) {
+                        controlFiles(done, res.status, res.body.message, "ppt",11);
                     });
             });
             it('will upload and store pptx ', function (done) {
                 service.post("/")
-                    .attach('archiveFile', __dirname + '/../files/' + files[key++].path)
-                    .send()
-                    .expect(function (err, res) {
-                        if (err) {
-                            done(err);
-                            return;
-                        }
-                        controlFiles(done, res.status, res.body.message, "pptx");
+                    .attach('archiveFile', __dirname + '/../files/' + files[12].path)
+                    .end()
+                    .expect(function ( res) {
+                        controlFiles(done, res.status, res.body.message, "pptx",12);
                     });
             });
         });
@@ -260,7 +223,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,0,"jpg");
                 });
         });
@@ -269,7 +232,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,1,"jpg");
                 });
         });
@@ -278,7 +241,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,2,"jpg");
                 });
             key++;
@@ -288,7 +251,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,0,"jpeg");
                 });
         });
@@ -297,7 +260,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,1,"jpeg");
                 });
         });
@@ -306,7 +269,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,2,"jpeg");
                 });
             key++;
@@ -316,7 +279,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,0,"bmp");
                 });
         });
@@ -325,7 +288,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,1,"bmp");
                 });
         });
@@ -334,7 +297,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,2,"bmp");
                 });
             key++;
@@ -345,7 +308,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,0,"png");
                 });
         });
@@ -354,7 +317,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,1,"png");
                 });
         });
@@ -363,7 +326,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,2,"png");
                 });
             key++;
@@ -374,7 +337,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,0,"tif");
                 });
         });
@@ -383,7 +346,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,1,"tif");
                 });
         });
@@ -392,7 +355,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,2,"tif");
                 });
             key++;
@@ -402,7 +365,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,0,"tiff");
                 });
         });
@@ -411,7 +374,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,1,"tiff");
                 });
         });
@@ -420,7 +383,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,2,"tiff");
                 });
             key++;
@@ -430,7 +393,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,0,"gif");
                 });
         });
@@ -439,7 +402,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,1,"gif");
                 });
         });
@@ -448,7 +411,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,2,"gif");
                 });
             key++;
@@ -458,7 +421,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,0,"doc");
                 });
         });
@@ -467,7 +430,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,1,"doc");
                 });
         });
@@ -476,7 +439,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,2,"doc");
                 });
             key++;
@@ -485,7 +448,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,0,"docx");
                 });
         });
@@ -494,7 +457,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,1,"docx");
                 });
         });
@@ -503,7 +466,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,2,"docx");
                 });
             key++;
@@ -513,7 +476,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,0,"xls");
                 });
         });
@@ -522,7 +485,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,1,"xls");
                 });
         });
@@ -531,7 +494,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,2,"xls");
                 });
             key++;
@@ -540,7 +503,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,0,"xlsx");
                 });
         });
@@ -549,7 +512,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,1,"xlsx");
                 });
         });
@@ -558,7 +521,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,2,"xlsx");
                 });
             key++;
@@ -568,7 +531,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,0,"ppt");
                 });
         });
@@ -577,7 +540,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,1,"ppt");
                 });
         });
@@ -586,7 +549,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,2,"ppt");
                 });
             key++;
@@ -595,7 +558,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,0,"pptx");
                 });
         });
@@ -604,7 +567,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,1,"pptx");
                 });
         });
@@ -613,7 +576,7 @@ describe('Folder Type REST services ', function () {
             service.get("/" + files[key].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
-                .end(function (err, res) {
+                .end(function (err,res) {
                     checkDownloadResult(err, res, done,2,"pptx");
                 });
             key++;
