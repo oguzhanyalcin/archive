@@ -43,12 +43,7 @@ var storage = multer.diskStorage({
 });
 var upload = multer({storage: storage}); //enable upload functionality
 var fileProcessor = require('./lib/FileProcessor.js')(settings);//File processing helper
-var downloadOptions={
-    headers: {
-        'x-timestamp': Date.now(),
-        'x-sent': true
-    }
-};
+
 //================================================================================================//
 
 //====================================ROUTES======================================================//
@@ -101,7 +96,7 @@ app.get('/:hash/:size', function (request, response) {
             response.type('json').status(error.status).end();
             return;
         }
-        response.sendFile(filesToProcess[0],downloadOptions,function(error){
+        response.sendFile(filesToProcess[0],function(error){
             if(error){
                 logger.log('error','File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + localPath + ' Error is: '+error);
                 response.type('json').status(error.status).end();

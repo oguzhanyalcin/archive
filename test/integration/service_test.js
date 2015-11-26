@@ -25,8 +25,11 @@ describe('Folder Type REST services ', function () {
         {path: "office_conversion/test.pptx", filename: "test.pptx", folder: "office_conversion"}
     ];
 
-    var key = 0;
-
+    /**
+     * parses the response stream which contains the file
+     * @param {object}  res
+     * @param callback
+     */
     function binaryParser(res, callback) {
         res.setEncoding('binary');
         res.data = '';
@@ -38,7 +41,16 @@ describe('Folder Type REST services ', function () {
         });
     }
 
-    function checkDownloadResult(error, response, done,type,extension) {
+    /**
+     * controls the results of download file process
+     * @param {Object}      error       error  object returned by the request
+     * @param {Object}      response    response returned by the request
+     * @param {function}    done        callback for mocha tests
+     * @param {number}      type        size of the requested image
+     * @param {string}      extension   extension of the file
+     * @param {number}      localKey    key od the file in the files array
+     */
+    function checkDownloadResult(error, response, done,type,extension,localKey) {
         if(error){
             return done(error);
         }
@@ -49,7 +61,7 @@ describe('Folder Type REST services ', function () {
                 return done(error);
             }
             var addon=type===1?"_usage.pdf":(type===2?"_thumb.jpg":("."+(module.settings.allowedExtensions[extension].useOriginalAsMaster?extension:"pdf")));
-            exec("cmp --silent " + module.settings.archiveRoot + "/" + fileProcessor.returnStoragePath(files[key].hash) +"/"+files[key].hash+ addon+" "+__dirname + "/../files/tmp/download", function (error) {
+            exec("cmp --silent " + module.settings.archiveRoot + "/" + fileProcessor.returnStoragePath(files[localKey].hash) +"/"+files[localKey].hash+ addon+" "+__dirname + "/../files/tmp/download", function (error) {
                 var masterError = error;
                 exec("rm -f " + __dirname + "/../files/tmp/download", function (error) {
                     done((masterError ? masterError : error));
@@ -217,369 +229,357 @@ describe('Folder Type REST services ', function () {
 
     describe('Download service ', function () {
 
-        key = 0;
 
         it(' will download the master copy of jpg', function (done) {
-            service.get("/" + files[key].hash + "/0")
+            service.get("/" + files[0].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,0,"jpg");
+                    checkDownloadResult(err, res, done,0,"jpg",0);
                 });
         });
 
         it(' will download the usage copy of jpg', function (done) {
-            service.get("/" + files[key].hash + "/1")
+            service.get("/" + files[0].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,1,"jpg");
+                    checkDownloadResult(err, res, done,1,"jpg",0);
                 });
         });
 
         it(' will download the thumbnail of jpg', function (done) {
-            service.get("/" + files[key].hash + "/2")
+            service.get("/" + files[0].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,2,"jpg");
+                    checkDownloadResult(err, res, done,2,"jpg",0);
                 });
-            key++;
+
         });
 
         it(' will download the master copy of jpeg', function (done) {
-            service.get("/" + files[key].hash + "/0")
+            service.get("/" + files[1].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,0,"jpeg");
+                    checkDownloadResult(err, res, done,0,"jpeg",1);
                 });
         });
 
         it(' will download the usage copy of jpeg', function (done) {
-            service.get("/" + files[key].hash + "/1")
+            service.get("/" + files[1].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,1,"jpeg");
+                    checkDownloadResult(err, res, done,1,"jpeg",1);
                 });
         });
 
         it(' will download the thumbnail of jpeg', function (done) {
-            service.get("/" + files[key].hash + "/2")
+            service.get("/" + files[1].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,2,"jpeg");
+                    checkDownloadResult(err, res, done,2,"jpeg",1);
                 });
-            key++;
         });
 
         it(' will download the master copy of bmp', function (done) {
-            service.get("/" + files[key].hash + "/0")
+            service.get("/" + files[2].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,0,"bmp");
+                    checkDownloadResult(err, res, done,0,"bmp",2);
                 });
         });
 
         it(' will download the usage copy of bmp', function (done) {
-            service.get("/" + files[key].hash + "/1")
+            service.get("/" + files[2].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,1,"bmp");
+                    checkDownloadResult(err, res, done,1,"bmp",2);
                 });
         });
 
         it(' will download the thumbnail of bmp', function (done) {
-            service.get("/" + files[key].hash + "/2")
+            service.get("/" + files[2].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,2,"bmp");
+                    checkDownloadResult(err, res, done,2,"bmp",2);
                 });
-            key++;
         });
 
 
         it(' will download the master copy of png', function (done) {
-            service.get("/" + files[key].hash + "/0")
+            service.get("/" + files[3].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,0,"png");
+                    checkDownloadResult(err, res, done,0,"png",3);
                 });
         });
 
         it(' will download the usage copy of png', function (done) {
-            service.get("/" + files[key].hash + "/1")
+            service.get("/" + files[3].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,1,"png");
+                    checkDownloadResult(err, res, done,1,"png",3);
                 });
         });
 
         it(' will download the thumbnail of png', function (done) {
-            service.get("/" + files[key].hash + "/2")
+            service.get("/" + files[3].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,2,"png");
+                    checkDownloadResult(err, res, done,2,"png",3);
                 });
-            key++;
         });
 
 
         it(' will download the master copy of tif', function (done) {
-            service.get("/" + files[key].hash + "/0")
+            service.get("/" + files[4].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,0,"tif");
+                    checkDownloadResult(err, res, done,0,"tif",4);
                 });
         });
 
         it(' will download the usage copy of tif', function (done) {
-            service.get("/" + files[key].hash + "/1")
+            service.get("/" + files[4].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,1,"tif");
+                    checkDownloadResult(err, res, done,1,"tif",4);
                 });
         });
 
         it(' will download the thumbnail of tif', function (done) {
-            service.get("/" + files[key].hash + "/2")
+            service.get("/" + files[4].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,2,"tif");
+                    checkDownloadResult(err, res, done,2,"tif",4);
                 });
-            key++;
         });
 
         it(' will download the master copy of tiff', function (done) {
-            service.get("/" + files[key].hash + "/0")
+            service.get("/" + files[5].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,0,"tiff");
+                    checkDownloadResult(err, res, done,0,"tiff",5);
                 });
         });
 
         it(' will download the usage copy of tiff', function (done) {
-            service.get("/" + files[key].hash + "/1")
+            service.get("/" + files[5].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,1,"tiff");
+                    checkDownloadResult(err, res, done,1,"tiff",5);
                 });
         });
 
         it(' will download the thumbnail of tiff', function (done) {
-            service.get("/" + files[key].hash + "/2")
+            service.get("/" + files[5].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,2,"tiff");
+                    checkDownloadResult(err, res, done,2,"tiff",5);
                 });
-            key++;
         });
 
         it(' will download the master copy of gif', function (done) {
-            service.get("/" + files[key].hash + "/0")
+            service.get("/" + files[6].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,0,"gif");
+                    checkDownloadResult(err, res, done,0,"gif",6);
                 });
         });
 
         it(' will download the usage copy of gif', function (done) {
-            service.get("/" + files[key].hash + "/1")
+            service.get("/" + files[6].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,1,"gif");
+                    checkDownloadResult(err, res, done,1,"gif",6);
                 });
         });
 
         it(' will download the thumbnail of gif', function (done) {
-            service.get("/" + files[key].hash + "/2")
+            service.get("/" + files[6].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,2,"gif");
+                    checkDownloadResult(err, res, done,2,"gif",6);
                 });
-            key++;
         });
 
         it(' will download the master copy of doc', function (done) {
-            service.get("/" + files[key].hash + "/0")
+            service.get("/" + files[7].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,0,"doc");
+                    checkDownloadResult(err, res, done,0,"doc",7);
                 });
         });
 
         it(' will download the usage copy of doc', function (done) {
-            service.get("/" + files[key].hash + "/1")
+            service.get("/" + files[7].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,1,"doc");
+                    checkDownloadResult(err, res, done,1,"doc",7);
                 });
         });
 
         it(' will download the thumbnail of doc', function (done) {
-            service.get("/" + files[key].hash + "/2")
+            service.get("/" + files[7].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,2,"doc");
+                    checkDownloadResult(err, res, done,2,"doc",7);
                 });
-            key++;
         });
         it(' will download the master copy of docx', function (done) {
-            service.get("/" + files[key].hash + "/0")
+            service.get("/" + files[8].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,0,"docx");
+                    checkDownloadResult(err, res, done,0,"docx",8);
                 });
         });
 
         it(' will download the usage copy of docx', function (done) {
-            service.get("/" + files[key].hash + "/1")
+            service.get("/" + files[8].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,1,"docx");
+                    checkDownloadResult(err, res, done,1,"docx",8);
                 });
         });
 
         it(' will download the thumbnail of docx', function (done) {
-            service.get("/" + files[key].hash + "/2")
+            service.get("/" + files[8].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,2,"docx");
+                    checkDownloadResult(err, res, done,2,"docx",8);
                 });
-            key++;
         });
 
         it(' will download the master copy of xls', function (done) {
-            service.get("/" + files[key].hash + "/0")
+            service.get("/" + files[9].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,0,"xls");
+                    checkDownloadResult(err, res, done,0,"xls",9);
                 });
         });
 
         it(' will download the usage copy of xls', function (done) {
-            service.get("/" + files[key].hash + "/1")
+            service.get("/" + files[9].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,1,"xls");
+                    checkDownloadResult(err, res, done,1,"xls",9);
                 });
         });
 
         it(' will download the thumbnail of xls', function (done) {
-            service.get("/" + files[key].hash + "/2")
+            service.get("/" + files[9].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,2,"xls");
+                    checkDownloadResult(err, res, done,2,"xls",9);
                 });
-            key++;
         });
         it(' will download the master copy of xlsx', function (done) {
-            service.get("/" + files[key].hash + "/0")
+            service.get("/" + files[10].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,0,"xlsx");
+                    checkDownloadResult(err, res, done,0,"xlsx",10);
                 });
         });
 
         it(' will download the usage copy of xlsx', function (done) {
-            service.get("/" + files[key].hash + "/1")
+            service.get("/" + files[10].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,1,"xlsx");
+                    checkDownloadResult(err, res, done,1,"xlsx",10);
                 });
         });
 
         it(' will download the thumbnail of xlsx', function (done) {
-            service.get("/" + files[key].hash + "/2")
+            service.get("/" + files[10].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,2,"xlsx");
+                    checkDownloadResult(err, res, done,2,"xlsx",10);
                 });
-            key++;
         });
 
         it(' will download the master copy of ppt', function (done) {
-            service.get("/" + files[key].hash + "/0")
+            service.get("/" + files[11].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,0,"ppt");
+                    checkDownloadResult(err, res, done,0,"ppt",11);
                 });
         });
 
         it(' will download the usage copy of ppt', function (done) {
-            service.get("/" + files[key].hash + "/1")
+            service.get("/" + files[11].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,1,"ppt");
+                    checkDownloadResult(err, res, done,1,"ppt",11);
                 });
         });
 
         it(' will download the thumbnail of ppt', function (done) {
-            service.get("/" + files[key].hash + "/2")
+            service.get("/" + files[11].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,2,"ppt");
+                    checkDownloadResult(err, res, done,2,"ppt",11);
                 });
-            key++;
         });
         it(' will download the master copy of pptx', function (done) {
-            service.get("/" + files[key].hash + "/0")
+            service.get("/" + files[12].hash + "/0")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,0,"pptx");
+                    checkDownloadResult(err, res, done,0,"pptx",12);
                 });
         });
 
         it(' will download the usage copy of pptx', function (done) {
-            service.get("/" + files[key].hash + "/1")
+            service.get("/" + files[12].hash + "/1")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,1,"pptx");
+                    checkDownloadResult(err, res, done,1,"pptx",12);
                 });
         });
 
         it(' will download the thumbnail of pptx', function (done) {
-            service.get("/" + files[key].hash + "/2")
+            service.get("/" + files[12].hash + "/2")
                 .expect(200)
                 .parse(binaryParser)
                 .end(function (err,res) {
-                    checkDownloadResult(err, res, done,2,"pptx");
+                    checkDownloadResult(err, res, done,2,"pptx",12);
                 });
-            key++;
+
         });
         
 
