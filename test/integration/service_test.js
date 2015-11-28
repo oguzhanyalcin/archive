@@ -1,5 +1,4 @@
 /*eslint-env node*/
-var expect = require('chai').expect;
 var assert = require('chai').assert;
 var fs = require('fs');
 var module = require('../../index.js');
@@ -61,7 +60,8 @@ describe('Folder Type REST services ', function () {
                 return done(error);
             }
             var addon=type===1?"_usage.pdf":(type===2?"_thumb.jpg":("."+(module.settings.allowedExtensions[extension].useOriginalAsMaster?extension:"pdf")));
-            exec("cmp --silent " + module.settings.archiveRoot + "/" + fileProcessor.returnStoragePath(files[localKey].hash) +"/"+files[localKey].hash+ addon+" "+__dirname + "/../files/tmp/download", function (error) {
+            exec("cmp --silent " + module.settings.archiveRoot + "/" + fileProcessor.returnStoragePath(files[localKey].hash) + "/" + files[localKey].hash + addon + " " + __dirname + "/../files/tmp/download",
+                function (error,stdout,stdderr) {
                 var masterError = error;
                 exec("rm -f " + __dirname + "/../files/tmp/download", function (error) {
                     done((masterError ? masterError : error));
@@ -108,6 +108,7 @@ describe('Folder Type REST services ', function () {
         function () {
 
             it('will upload and store jpg ', function (done) {
+                this.timeout(4000);
                 service.post("/")
                     .attach('archiveFile', __dirname + '/../files/' + files[0].path)
                     .end()
@@ -117,6 +118,7 @@ describe('Folder Type REST services ', function () {
             });
 
             it('will upload and store jpeg ', function (done) {
+                this.timeout(4000);
                 service.post("/")
                     .attach('archiveFile', __dirname + '/../files/' + files[1].path)
                     .end()
@@ -126,6 +128,7 @@ describe('Folder Type REST services ', function () {
             });
 
             it('will upload and store bmp ', function (done) {
+                this.timeout(4000);
                 service.post("/")
                     .attach('archiveFile', __dirname + '/../files/' + files[2].path)
                     .end()
@@ -136,6 +139,7 @@ describe('Folder Type REST services ', function () {
 
 
             it('will upload and store png ', function (done) {
+                this.timeout(4000);
                 service.post("/")
                     .attach('archiveFile', __dirname + '/../files/' + files[3].path)
                     .end()
@@ -146,6 +150,7 @@ describe('Folder Type REST services ', function () {
 
 
             it('will upload and store tif ', function (done) {
+                this.timeout(4000);
                 service.post("/")
                     .attach('archiveFile', __dirname + '/../files/' + files[4].path)
                     .end()
@@ -155,11 +160,12 @@ describe('Folder Type REST services ', function () {
             });
 
             it('will upload and store tiff ', function (done) {
+                this.timeout(4000);
                 service.post("/")
                     .attach('archiveFile', __dirname + '/../files/' + files[5].path)
                     .end()
                     .expect(function ( res) {
-                        controlFiles(done, res.status, res.body.message, "tiff",4);
+                        controlFiles(done, res.status, res.body.message, "tiff",5);
                     });
             });
 
@@ -174,6 +180,7 @@ describe('Folder Type REST services ', function () {
             });
 
             it('will upload and store doc ', function (done) {
+                this.timeout(4000);
                 service.post("/")
                     .attach('archiveFile', __dirname + '/../files/' + files[7].path)
                     .end()
@@ -183,6 +190,7 @@ describe('Folder Type REST services ', function () {
             });
 
             it('will upload and store docx ', function (done) {
+                this.timeout(50000);
                 service.post("/")
                     .attach('archiveFile', __dirname + '/../files/' + files[8].path)
                     .end()
@@ -192,6 +200,7 @@ describe('Folder Type REST services ', function () {
             });
 
             it('will upload and store xls ', function (done) {
+                this.timeout(4000);
                 service.post("/")
                     .attach('archiveFile', __dirname + '/../files/' + files[9].path)
                     .end()
@@ -201,6 +210,7 @@ describe('Folder Type REST services ', function () {
             });
 
             it('will upload and store xlsx ', function (done) {
+                this.timeout(30000);
                 service.post("/")
                     .attach('archiveFile', __dirname + '/../files/' + files[10].path)
                     .end()
@@ -210,6 +220,7 @@ describe('Folder Type REST services ', function () {
             });
 
             it('will upload and store ppt ', function (done) {
+                this.timeout(60000);
                 service.post("/")
                     .attach('archiveFile', __dirname + '/../files/' + files[11].path)
                     .end()
@@ -218,6 +229,7 @@ describe('Folder Type REST services ', function () {
                     });
             });
             it('will upload and store pptx ', function (done) {
+                this.timeout(12000);
                 service.post("/")
                     .attach('archiveFile', __dirname + '/../files/' + files[12].path)
                     .end()

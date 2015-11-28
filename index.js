@@ -87,7 +87,7 @@ app.get('/:hash/:size', function (request, response) {
             return;
         }
         var filesToProcess=files.filter(function (file) {
-            return  size==0?file.indexOf(hash+"_")===-1:file.startsWith(hash+extraInfo)===0 ;
+            return  size==0?file.indexOf(hash+"_")===-1:file.indexOf(hash+extraInfo)!=-1 ;
         }).map(function (file) {
             return path.join(localPath, file);
         });
