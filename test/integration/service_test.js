@@ -180,7 +180,7 @@ describe('Folder Type REST services ', function () {
             });
 
             it('will upload and store doc ', function (done) {
-                this.timeout(4000);
+                this.timeout(40000);
                 service.post("/")
                     .attach('archiveFile', __dirname + '/../files/' + files[7].path)
                     .end()

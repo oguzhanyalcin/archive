@@ -506,7 +506,7 @@ describe('File processing functions', function () {
          */
         function controlFiles(callback,status,message,extension){
             assert.equal(status,200);
-            assert.equal(message.length,32);
+            assert.equal(message.length,32);//we are not calculating md5
             var path=testSettings.archiveRoot+"/"+fileProcessor23.returnStoragePath(message);
             var originalFile=path+"/"+message+"."+(testSettings.allowedExtensions[extension].useOriginalAsMaster?extension:"pdf");
             var usageFile=path+"/"+message+"_usage.pdf";
