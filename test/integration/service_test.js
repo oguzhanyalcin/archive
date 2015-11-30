@@ -6,7 +6,7 @@ var fileProcessor = require('../../lib/FileProcessor.js')(module.settings);
 var service = require('supertest')(module.app);
 var exec = require('child_process').exec; //allows calling shell scripts as child processes
 
-describe('Folder Type REST services ', function () {
+describe('REST services ', function () {
 
     var files = [
         {path: "image_conversion/test.jpg", filename: "test.jpg", folder: "image_conversion"},

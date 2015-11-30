@@ -4,19 +4,19 @@ var express = require('express'); //loads the express.js library
 var app = express(); //initializes an express app
 var fs = require('fs'); //enables file system functions
 var multer = require('multer'); //enables uploading files
-var path=require('path');//enables path based operations
-var crypto=require('crypto');//enables crypto operations
+var path = require('path');//enables path based operations
+var crypto = require('crypto');//enables crypto operations
 var winston = require('winston');//enable logging
-var logger = new(winston.Logger)({
+var logger = new (winston.Logger)({
     exitOnError: false,
     transports: [
         new (winston.transports.File)({
             filename: __dirname + '/logs/server.log',
             maxFiles: 50,
-            maxsize: 1024*1024,
-            json:false
+            maxsize: 1024 * 1024,
+            json: false
         }),
-        new(winston.transports.Console)({
+        new (winston.transports.Console)({
             colorize: true
         })
     ]
@@ -28,7 +28,7 @@ var settings;
 try {
     settings = JSON.parse(fs.readFileSync('./settings.json'));
 } catch (ex) {
-    logger.log('error',ex);
+    logger.log('error', ex);
     return;
 }
 
@@ -73,41 +73,43 @@ app.post('/', upload.single('archiveFile'), function (request, response) {
  */
 app.get('/:hash/:size', function (request, response) {
     var hash = request.params.hash;
-    var size=request.params.size || 0;
-    if(!hash || hash.length!=32){
+    var imgSize = request.params.size || 0;
+    if (!hash || hash.length != 32) {
+        logger.log('error', 'hash length invalid. (%s)', hash);
         response.type('json').status(400).send({message: "Hash not recognized"}).end();
         return;
     }
-    var extraInfo=size==1?"_usage":(size==2?"_thumb":"");
-    var localPath=settings.archiveRoot+"/"+fileProcessor.returnStoragePath(hash);
-    fs.readdir(localPath,function(error,files){
-        if(error){
-            logger.log('error','File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + localPath + ' Error is: '+error);
+    var extraInfo = (imgSize == 1 ? "_usage" : (imgSize == 2 ? "_thumb" : ""));
+    var localPath = settings.archiveRoot + "/" + fileProcessor.returnStoragePath(hash);
+    fs.readdir(localPath, function (error, files) {
+        if (error) {
+            logger.log('error', 'File cannot be served with information Hash: ' + hash + ' Size:' + size + ' under path: ' + localPath + ' Error is: ' + error);
             response.type('json').status(error.status).end();
             return;
         }
-        var filesToProcess=files.filter(function (file) {
-            return  size==0?file.indexOf(hash+"_")===-1:file.indexOf(hash+extraInfo)!=-1 ;
+        var filesToProcess = files.filter(function (file) {
+            return imgSize == 0 ? file.indexOf(hash + "_") === -1 : file.indexOf(hash + extraInfo) != -1;
         }).map(function (file) {
             return path.join(localPath, file);
         });
-        if(!filesToProcess || filesToProcess.length===0){
-            logger.log('error','File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + localPath+' Error is: File not found');
+        if (!filesToProcess || filesToProcess.length === 0) {
+            logger.log('error', 'File cannot be served with information Hash: ' + hash + ' Size:' + size + ' under path: ' + localPath + ' Error is: File not found');
             response.type('json').status(error.status).end();
             return;
         }
-        response.sendFile(filesToProcess[0],function(error){
-            if(error){
-                logger.log('error','File cannot be served with information Hash: '+hash + ' Size:'+size+' under path: ' + localPath + ' Error is: '+error);
+        response.sendFile(filesToProcess[0], function (error) {
+            if (error) {
+                logger.log('error', 'File cannot be served with information Hash: ' + hash + ' Size:' + size + ' under path: ' + localPath + ' Error is: ' + error);
                 response.type('json').status(error.status).end();
                 return;
             }
         });
     });
-});
+})
+;
 //================================================================================================//
-module.exports={
-    app:app,
-    logger:logger,
+module.exports = {
+    app: app,
+    logger: logger,
     settings: settings
 };
