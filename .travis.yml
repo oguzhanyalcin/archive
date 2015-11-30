@@ -3,7 +3,6 @@ node_js:
   - "4.1"
   - "4.0"
   - "0.12"
-  - "0.11"
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -y libreoffice
@@ -18,3 +17,4 @@ addons:
         repo_token: 5708ac2ce7800648d7f36b2b5150d4aeb9ed16eb6ffd967ff555e56743842b8c
 after_script:
   - codeclimate-test-reporter < coverage/lcov.info
+  - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js
