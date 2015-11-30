@@ -211,7 +211,7 @@ describe('REST services ', function () {
             });
 
             it('will upload and store xlsx ', function (done) {
-                this.timeout(30000);
+                this.timeout(50000);
                 service.post("/")
                     .attach('archiveFile', __dirname + '/../files/' + files[10].path)
                     .end()
