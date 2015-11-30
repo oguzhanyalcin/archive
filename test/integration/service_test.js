@@ -80,7 +80,7 @@ describe('REST services ', function () {
      */
     function controlFiles(callback, status, message, extension,localKey) {
         files[localKey].hash = message;
-        logger.log('info','hash value for file:'+ files[localKey].hash+' localkey:'+localKey+ ' filepath:'+ files[localKey].path );
+        console.log('hash value for file:'+ files[localKey].hash+' localkey:'+localKey+ ' filepath:'+ files[localKey].path );
         assert.equal(status, 200);
         assert.equal(message.length, 32);
         var path = module.settings.archiveRoot + "/" + fileProcessor.returnStoragePath(message);
